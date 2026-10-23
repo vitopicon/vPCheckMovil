@@ -1,0 +1,1661 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>vPCheck Móvil</title>
+<style>
+/* Misma identidad que vPCheck para ordenadores: fondo gris claro, tarjetas blancas, azul #0B84C6 */
+:root{
+  --bg:#F3F4F6; --card:#FFFFFF; --line:#E5E7EB; --line2:#D1D5DB; --soft:#F9FAFB;
+  --fg:#111827; --fg2:#374151; --fg3:#4B5563; --muted:#6B7280; --muted2:#9CA3AF;
+  --pri:#0B84C6; --pri-soft:#E8F6FD; --pri-dark:#0A6A9F; --pri-hover:#7CCBF2; --navy:#123E6B; --sky:#1AA7EC;
+  --ok:#16A34A; --ok-soft:#DCFCE7; --ok-fg:#15803D;
+  --warn:#D97706; --warn-soft:#FEF3C7; --warn-fg:#B45309; --warn-bg:#FFFBEB; --warn-line:#FDE68A;
+  --bad:#DC2626; --bad-soft:#FEE2E2; --bad-fg:#B91C1C; --bad-bg:#FEF2F2; --bad-line:#FECACA;
+  --info-soft:#F1F5F9; --info-fg:#475569; --manual:#FBBF24; --manual-fg:#78350F;
+  --scrim:rgba(15,23,42,.6);
+  --font:"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--font)}
+body{min-height:100vh;padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- Barra superior ---------- */
+.top{position:sticky;top:0;z-index:62;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.top-in{display:flex;align-items:center;gap:10px;max-width:720px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.brand svg{width:38px;height:38px;flex:none}
+.bn{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.bn b{color:var(--navy)} .bn i{font-style:normal;color:var(--sky)}
+.bn small{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--pri);background:var(--pri-soft);border-radius:5px;padding:2px 5px;margin-left:6px;vertical-align:4px}
+.be{font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--navy);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{border:1px solid var(--line2);background:var(--card);border-radius:8px;height:38px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;cursor:pointer}
+.prog{max-width:720px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--pri);border-radius:4px;transition:width .3s}
+.fases{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+.fases::-webkit-scrollbar{display:none}
+.fase{flex:none;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:5px 9px 5px 6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.fase .c{width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);display:inline-flex;align-items:center;justify-content:center}
+.fase .c svg{width:10px;height:10px;stroke-width:3.5;color:#fff}
+.fase.activo{background:var(--pri-soft);color:var(--pri-dark);font-weight:600}
+.fase.activo .c{border:5px solid var(--pri)}
+.fase.hecho{color:var(--fg)} .fase.hecho .c{background:var(--ok);border-color:var(--ok)}
+.fase.omitido{color:var(--muted2)} .fase.omitido .c{background:var(--line);border-color:var(--line)}
+
+/* ---------- Vistas ---------- */
+.wrap{max-width:720px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+h1{font-size:23px;font-weight:600;margin:0}
+.muted{color:var(--muted)} .sm{font-size:13px}
+.lead{color:var(--muted);margin:6px 0 18px}
+.equipo{display:flex;gap:14px;align-items:center;background:var(--soft);border:1px solid #F3F4F6;border-radius:10px;padding:14px}
+.eq-ico{width:44px;height:44px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:flex;align-items:center;justify-content:center;flex:none}
+.eq-t{font-size:16px;font-weight:600}
+.eq-s{font-size:13px;color:var(--muted);margin-top:2px}
+.min0{min-width:0;flex:1}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+label.lbl,.lbl{display:block;font-weight:600;margin:18px 0 6px}
+input[type=text],input[type=number],textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--fg);outline:none}
+input:focus,textarea:focus{border-color:var(--pri)}
+.hint{font-size:12px;color:var(--muted);margin:6px 2px 0}
+hr{border:0;border-top:1px solid var(--line);margin:22px 0 18px}
+.nota{display:flex;gap:10px;background:var(--warn-bg);border:1px solid var(--warn-line);color:#92400E;border-radius:8px;padding:10px 12px;font-size:13px;margin-top:14px}
+.nota svg{color:var(--warn-fg);margin-top:1px}
+.switch{display:flex;align-items:center;gap:14px;cursor:pointer}
+.switch>span{flex:1} .switch small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.switch i{width:44px;height:24px;border-radius:12px;background:var(--line2);position:relative;flex:none;transition:background .15s}
+.switch i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+.switch input:checked+i{background:var(--pri)} .switch input:checked+i::after{left:23px}
+.switch input:focus-visible+i{outline:2px solid var(--pri);outline-offset:2px}
+.seg{display:inline-flex;background:var(--bg);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:7px;padding:7px 14px;color:var(--fg3);cursor:pointer;font-size:14px}
+.seg button[aria-checked=true]{background:var(--card);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.dis{opacity:.4;pointer-events:none}
+.row-card{display:flex;align-items:center;gap:12px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:18px}
+.row-card svg{color:var(--pri)} .row-card small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.err{color:var(--bad-fg);margin:16px 0 0}
+.btn{border:1px solid var(--line2);background:var(--card);color:var(--fg);border-radius:8px;padding:11px 16px;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.btn:active{filter:brightness(.92)}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.good{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.bad{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad-fg)}
+.btn.big{width:100%;margin-top:22px;padding:14px;font-size:16px}
+.btn.full{width:100%}
+.link{background:none;border:0;color:var(--pri-dark);font-weight:600;padding:10px;cursor:pointer;align-self:center}
+
+.run-head{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.cnts{display:flex;gap:6px;flex:none}
+.cnt{display:inline-flex;align-items:center;gap:5px;border-radius:14px;padding:4px 10px;font-weight:600;font-size:13px;font-variant-numeric:tabular-nums}
+.cnt svg{width:12px;height:12px;stroke-width:3}
+.cnt.ok{background:var(--ok-soft);color:var(--ok-fg)} .cnt.at{background:var(--warn-soft);color:var(--warn-fg)} .cnt.fa{background:var(--bad-soft);color:var(--bad-fg)}
+.fase-card{padding:16px 18px}
+.fase-card b{font-size:17px;font-weight:600}
+.fase-card p{margin:3px 0 12px;font-size:14px;min-height:20px}
+.sec-t{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);margin:10px 4px 0}
+.checks{display:flex;flex-direction:column;gap:6px}
+.chk{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start}
+.chk .pt{font-weight:600}
+.chk .dt{color:var(--fg3);font-size:13px;margin-top:1px;overflow-wrap:anywhere}
+.chk .ar{color:var(--muted2);font-size:11.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:11px;padding:3px 9px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--info-soft);color:var(--info-fg)}
+.pill svg{width:11px;height:11px;stroke-width:3}
+.pill.OK{background:var(--ok-soft);color:var(--ok-fg)} .pill.ATENCION{background:var(--warn-soft);color:var(--warn-fg)} .pill.FALLO{background:var(--bad-soft);color:var(--bad-fg)}
+
+.heroe{border-radius:14px;padding:20px;color:#fff;display:flex;align-items:center;gap:14px;background:var(--ok)}
+.heroe.atencion{background:var(--warn)} .heroe.fallo{background:var(--bad)}
+.h-ico{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex:none}
+.h-ico svg{width:24px;height:24px;stroke-width:2.6}
+.h-t{font-size:20px;font-weight:700;line-height:1.2}
+.h-s{opacity:.92;font-size:13px;margin-top:4px}
+.grado{background:rgba(255,255,255,.16);border-radius:12px;padding:6px 14px;text-align:center;flex:none}
+.grado small{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;opacity:.85}
+.grado b{font-size:30px;font-weight:800;line-height:1.1}
+.grado b.na{font-size:17px}
+.datos{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.datos span{display:block;font-size:12px;color:var(--muted)}
+.datos b{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.ok-line{display:flex;gap:10px;align-items:center;color:var(--fg2)} .ok-line svg{color:var(--ok)}
+.ruta{font-size:12.5px;margin:4px 2px 0;color:var(--warn-fg)} .ruta.ok{color:var(--ok-fg)} .ruta.bad{color:var(--bad-fg)}
+.acciones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ---------- Diálogo (hoja inferior) ---------- */
+.sheet{position:fixed;inset:0;z-index:60;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+.sh-card{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:18px 18px 0 0;padding:24px max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25);animation:sube .18s ease-out}
+@keyframes sube{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (min-width:640px){.sheet{align-items:center}.sh-card{border-radius:14px;padding:28px 30px}}
+@media (prefers-reduced-motion:reduce){.sh-card{animation:none}.bar>i{transition:none}}
+.sh-ico{width:46px;height:46px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:flex;align-items:center;justify-content:center}
+.sh-ico svg{width:22px;height:22px}
+.sh-card h2{font-size:20px;font-weight:600;margin:14px 0 0;text-wrap:balance}
+.sh-card p.tx{color:var(--fg3);margin:8px 0 0;white-space:pre-line}
+.sh-body:not(:empty){margin-top:16px}
+.sh-btns{display:flex;flex-direction:column;gap:8px;margin-top:22px}
+.sh-btns:empty{display:none}
+#dlg2{z-index:95}
+
+/* contenido de los diálogos */
+.medidor{height:14px;border-radius:8px;background:var(--line);overflow:hidden}
+.medidor i{display:block;height:100%;width:0;background:var(--ok);transition:width .05s linear}
+.estado-line{display:flex;align-items:center;gap:10px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-weight:600}
+.estado-line .dot{width:10px;height:10px;border-radius:50%;background:var(--muted2);flex:none}
+.estado-line.on .dot{background:var(--ok)}
+.sens{display:flex;flex-direction:column;gap:6px}
+.sens>div{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sens .n{flex:1;min-width:0} .sens .n b{display:block;font-size:14px} .sens .n small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.teclas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tecla{border:0;border-radius:10px;background:var(--line);color:var(--fg2);font-weight:600;font-size:13px;padding:18px 6px;cursor:pointer;text-align:center}
+.tecla.det{background:#22C55E;color:#fff}
+.tecla.man{background:var(--manual);color:var(--manual-fg)}
+.opciones{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opc{border:2px solid var(--line);border-radius:10px;background:var(--card);padding:12px 10px;text-align:left;cursor:pointer}
+.opc[aria-checked=true]{border-color:var(--pri);background:var(--pri-soft)}
+.opc .g{font-size:26px;font-weight:700;display:block;line-height:1.1}
+.opc b{display:block;font-size:13px;margin-top:2px} .opc small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.chkgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.casilla{display:flex;gap:10px;align-items:center;font-size:14px;cursor:pointer}
+.casilla input{width:20px;height:20px;accent-color:var(--pri);flex:none}
+.cfg-g{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px}
+.cfg-g h3{font-size:15px;margin:0 0 12px;font-weight:600}
+.hist{display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto}
+.hist div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:6px 0;font-size:13px}
+.hist small{color:var(--muted)}
+
+/* ---------- Capa a pantalla completa (pruebas) ---------- */
+.layer{position:fixed;inset:0;z-index:90;background:#000;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.layer canvas{position:absolute;inset:0;width:100%;height:100%}
+.flot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(17,24,39,.85);border-radius:12px;padding:14px 18px;text-align:center;max-width:86vw;font-size:15px;font-weight:600}
+.flot small{display:block;font-weight:400;opacity:.8;margin-top:4px;font-size:13px}
+.flot .btn{margin-top:12px;min-height:40px}
+.layer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.cam-top{position:absolute;left:0;right:0;top:0;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 24px;background:linear-gradient(rgba(0,0,0,.65),transparent);font-size:15px}
+.cam-top small{display:block;opacity:.8;font-size:12px;margin-top:2px}
+.cam-bar{position:absolute;left:0;right:0;bottom:0;padding:24px 16px calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.75));display:flex;flex-direction:column;gap:10px}
+.cam-row{display:flex;gap:8px}
+.cam-row .btn{flex:1}
+.btn.ghost{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+.btn.ghost[aria-pressed=true]{background:#FDE047;color:#111827;border-color:#FDE047}
+
+/* ---------- Visor de informes ---------- */
+.visor{position:fixed;inset:0;z-index:92;background:var(--bg);display:flex;flex-direction:column}
+.visor-bar{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+.visor-bar b{flex:1}
+.visor iframe{flex:1;border:0;width:100%;background:#fff}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg viewBox="-1 -1 102 102" aria-hidden="true"><circle cx="44" cy="56" r="31" fill="none" stroke="#123E6B" stroke-width="9"/><path d="M2,49 C18,47 31,52 41,68 C56,42 74,20 99,5 C80,25 60,52 45,93 Z" fill="#1AA7EC" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"/><polyline points="23,47 31,47 34,40 38,55 42,35 46,51 49,45 57,45" fill="none" stroke="#fff" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><polyline points="23,47 31,47 34,40 38,55 42,35 46,51 49,45 57,45" fill="none" stroke="#1AA7EC" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <div class="min0"><div class="bn"><b>vP</b><i>Check</i><small>MÓVIL</small></div><div class="be">AUDITORÍA Y DIAGNÓSTICO DE MÓVILES</div></div>
+    </div>
+    <button id="btnCancelar" class="icon-btn" hidden>Cancelar</button>
+  </div>
+  <div id="progreso" class="prog" hidden>
+    <div class="prog-row"><span id="txtPaso">Preparado</span><span id="txtTiempo">00:00</span></div>
+    <div class="bar"><i id="pbTotal"></i></div>
+    <div id="fases" class="fases"></div>
+  </div>
+</header>
+
+<!-- ============ INICIO ============ -->
+<main id="vInicio" class="wrap">
+  <section class="card">
+    <h1>Nueva revisión</h1>
+    <p class="lead">Revisa los datos detectados, indica quién hace la revisión y pulsa Comenzar.</p>
+    <div class="equipo">
+      <span class="eq-ico" data-i="phone"></span>
+      <div class="min0"><div id="txtEquipo" class="eq-t">Detectando móvil…</div><div id="txtEquipoSub" class="eq-s"></div></div>
+    </div>
+    <div id="avisoWeb" class="nota" hidden><span data-i="warn"></span><span>Estás usando la versión web. La salud de la batería, los botones de volumen, el auricular, el sensor de proximidad y el guardado en la carpeta del móvil solo funcionan en la app instalada (APK).</span></div>
+
+    <label class="lbl" for="inOperario">Operario</label>
+    <input type="text" id="inOperario" autocomplete="name">
+    <label class="lbl" for="inSerie">IMEI o nº de serie</label>
+    <input type="text" id="inSerie" autocapitalize="characters" autocomplete="off">
+    <p class="hint">Marca *#06# en el teléfono para ver el IMEI, o búscalo en Ajustes › Información del teléfono.</p>
+
+    <hr>
+    <label class="switch" for="chkRapida">
+      <span><b>Modo rápido</b><small>Omite la prueba de rendimiento y el test de memoria.</small></span>
+      <input type="checkbox" id="chkRapida"><i></i>
+    </label>
+    <div id="panelCPU">
+      <div class="lbl">Duración de la prueba de rendimiento</div>
+      <div class="seg" role="radiogroup" id="segCPU">
+        <button type="button" role="radio" data-s="30">30 s</button>
+        <button type="button" role="radio" data-s="60">1 min</button>
+        <button type="button" role="radio" data-s="120">2 min</button>
+        <button type="button" role="radio" data-s="300">5 min</button>
+      </div>
+      <p class="hint">Carga todos los núcleos y mide si el móvil pierde rendimiento al calentarse. Después prueba una parte de la RAM con 6 patrones.</p>
+    </div>
+    <p id="txtEstimacion" class="muted sm" style="margin:14px 0 0"></p>
+
+    <div class="row-card">
+      <span data-i="doc"></span>
+      <div class="min0"><b>Informe corto para el cliente</b><small id="txtEstadoCorto"></small></div>
+      <button type="button" id="btnConfigCorto" class="btn">Configurar</button>
+    </div>
+
+    <p id="errInicio" class="err" hidden></p>
+    <button type="button" id="btnIniciar" class="btn pri big" disabled><span data-i="play"></span>Comenzar revisión</button>
+  </section>
+  <button type="button" id="btnHistorial" class="link">Historial y resumen CSV</button>
+</main>
+
+<!-- ============ EJECUCIÓN ============ -->
+<main id="vRun" class="wrap" hidden>
+  <section class="card run-head">
+    <div class="min0"><div id="txtEqRun" class="eq-t ell"></div><div id="txtEqRunSub" class="eq-s ell"></div></div>
+    <div class="cnts">
+      <span class="cnt ok" title="Correctos"><span data-i="ok"></span><b id="cntOk">0</b></span>
+      <span class="cnt at" title="Avisos"><span data-i="warn"></span><b id="cntAt">0</b></span>
+      <span class="cnt fa" title="Fallos"><span data-i="fail"></span><b id="cntFa">0</b></span>
+    </div>
+  </section>
+  <section class="card fase-card">
+    <b id="txtFase"></b>
+    <p id="txtFaseDet" class="muted"></p>
+    <div class="bar"><i id="pbFase"></i></div>
+  </section>
+  <div class="sec-t">RESULTADOS</div>
+  <div id="listaChecks" class="checks"></div>
+</main>
+
+<!-- ============ RESULTADO ============ -->
+<main id="vRes" class="wrap" hidden>
+  <section id="heroe" class="heroe">
+    <span class="h-ico" id="heroeIco"></span>
+    <div class="min0"><div id="txtVeredicto" class="h-t"></div><div id="txtVeredictoSub" class="h-s"></div></div>
+    <div class="grado"><small>GRADO</small><b id="txtGrado"></b></div>
+  </section>
+  <section class="card datos" id="gridDatos"></section>
+  <div class="sec-t" id="tituloInc">PUNTOS A REVISAR</div>
+  <div id="listaInc" class="checks"></div>
+  <section id="sinInc" class="card ok-line" hidden><span data-i="ok"></span>Todas las pruebas son correctas. No hay nada que revisar.</section>
+  <p id="txtRuta" class="ruta">Los informes todavía no se han guardado.</p>
+  <div class="acciones">
+    <button type="button" id="btnVer" class="btn"><span data-i="doc"></span>Ver informe</button>
+    <button type="button" id="btnVerCli" class="btn"><span data-i="doc"></span>Informe cliente</button>
+    <button type="button" id="btnCompartir" class="btn"><span data-i="share"></span>Compartir</button>
+    <button type="button" id="btnGuardar" class="btn pri"><span data-i="save"></span><span id="txtBtnGuardar">Guardar informes</span></button>
+  </div>
+  <button type="button" id="btnNueva" class="btn full">Nueva revisión</button>
+</main>
+
+<!-- Diálogos -->
+<div id="sheet" class="sheet" hidden><div class="sh-card" role="dialog" aria-modal="true" aria-labelledby="shTitle"><span id="shIco" class="sh-ico"></span><h2 id="shTitle"></h2><p id="shText" class="tx"></p><div id="shBody" class="sh-body"></div><div id="shBtns" class="sh-btns"></div></div></div>
+<div id="dlg2" class="sheet" hidden><div class="sh-card" role="dialog" aria-modal="true" aria-labelledby="d2Title"><span id="d2Ico" class="sh-ico"></span><h2 id="d2Title"></h2><p id="d2Text" class="tx"></p><div id="d2Body" class="sh-body"></div><div id="d2Btns" class="sh-btns"></div></div></div>
+<div id="layer" class="layer" hidden></div>
+<div id="visor" class="visor" hidden><div class="visor-bar"><b id="visorT"></b><button type="button" id="visorX" class="btn">Cerrar</button></div><iframe id="visorF" title="Informe"></iframe></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CONFIGURACIÓN (edita estos valores a tu gusto)
+   ===================================================================== */
+const CFG = {
+  Bateria_OK: 80,            // % de salud igual o superior = OK
+  Bateria_Minimo: 60,        // % por debajo = FALLO; entre ambos = ATENCION
+  Bateria_CiclosAviso: 500,  // ciclos de carga a partir de los cuales se avisa
+  Temp_Atencion: 45,         // °C de la batería tras la prueba de rendimiento
+  Temp_Fallo: 50,
+  RAM_MinimaGB: 4,           // por debajo = ATENCION
+  Almac_LibreMinPct: 10,     // % libre por debajo = ATENCION
+  Android_MinApi: 29,        // por debajo de Android 10 = ATENCION
+  Parche_MesesAviso: 24,     // parche de seguridad más antiguo = ATENCION
+  Rend_OK: 75, Rend_Aviso: 55,
+  Velocidad_MinMbps: 5
+};
+
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ABORT = new Error('ABORT');
+const N = window.VPCNative || null;              // puente nativo (solo en la app APK)
+function nat(m, ...a) {
+  if (!N || typeof N[m] !== 'function') return null;
+  try { const r = N[m](...a); if (typeof r === 'string' && /^[\[{]/.test(r)) return JSON.parse(r); return r; } catch (e) { return null; }
+}
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null) e.append(c.nodeType ? c : document.createTextNode(c));
+  return e;
+}
+const pad = n => String(n).padStart(2, '0');
+const fechaHora = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fechaCorta = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+const cap1 = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+/* ---------- iconos ---------- */
+const P = {
+  ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  warn:'<path d="M12 3.5L2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.3v.1"/>',
+  fail:'<path d="M6 6l12 12M18 6L6 18"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.1"/>',
+  phone:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',
+  touch:'<path d="M9 11V5.5a1.5 1.5 0 013 0V11m0-1.5a1.5 1.5 0 013 0V12m0-1a1.5 1.5 0 013 0v3.5a6.5 6.5 0 01-6.5 6.5h-.6a5 5 0 01-4-2l-3-4.2a1.5 1.5 0 012.3-1.9L9 14"/>',
+  audio:'<path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"/>',
+  cam:'<path d="M3 8a2 2 0 012-2h2.5l1.5-2h6l1.5 2H19a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><circle cx="12" cy="13" r="3.8"/>',
+  sensor:'<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 000 8.4M16.2 7.8a6 6 0 010 8.4M5 5a10 10 0 000 14M19 5a10 10 0 010 14"/>',
+  botones:'<rect x="5.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M20 6.5v4M20 13v2.5"/>',
+  bolt:'<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>',
+  star:'<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4l-5.3 3 1.2-6-4.5-4.1 6-.7z"/>',
+  bat:'<rect x="2.5" y="7" width="17" height="10" rx="2"/><path d="M21.5 10.5v3M6 10.5v3M9.5 10.5v3"/>',
+  lock:'<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 018 0v3"/>',
+  vib:'<rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 8v8M2 10v4M19.5 8v8M22 10v4"/>',
+  play:'<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',
+  doc:'<path d="M6 2.5h8l4 4v15H6z"/><path d="M14 2.5v4h4M9 12h6M9 15.5h6"/>',
+  save:'<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4.5 17.5v3h15v-3"/>',
+  share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="5.5" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4M8.2 13.2l7.6 4"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0119 0M5.5 12.3a9.5 9.5 0 0113 0M8.6 15.5a5 5 0 016.8 0"/><path d="M12 19v.1"/>'
+};
+const ico = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ''}</svg>`;
+document.querySelectorAll('[data-i]').forEach(s => s.innerHTML = ico(s.dataset.i));
+
+/* ---------- eventos del puente nativo ---------- */
+const oyentes = {};
+window.vpcEvent = (tipo, datos) => { (oyentes[tipo] || []).slice().forEach(f => { try { f(datos || {}); } catch (e) {} }); };
+function onNat(tipo, f) { (oyentes[tipo] = oyentes[tipo] || []).push(f); return () => { oyentes[tipo] = (oyentes[tipo] || []).filter(x => x !== f); }; }
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const FASES = [
+  ['ident','Identificación'], ['sistema','Sistema y memoria'], ['bat','Batería'], ['red','Red y conectividad'],
+  ['estres','Rendimiento'], ['pantalla','Pantalla'], ['tactil','Pantalla táctil'], ['sensores','Sensores'],
+  ['audio','Altavoces y vibración'], ['micro','Micrófono'], ['camara','Cámaras'], ['botones','Botones'],
+  ['puertos','Carga y conexiones'], ['cuentas','Cuentas y bloqueos'], ['estetica','Estado estético'], ['informe','Informe']
+];
+const S = {
+  checks: [], n: { OK: 0, ATENCION: 0, FALLO: 0 }, omit: new Set(), abort: false, running: false,
+  segCPU: 60, inicio: 0, eq: null, res: null, pend: null, cleanups: [], askRes: null, faseUi: '', internet: '', wake: null
+};
+let actx = null;
+function audioCtx() { if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+let bateriaWeb = null;
+if (navigator.getBattery) navigator.getBattery().then(b => bateriaWeb = b).catch(() => {});
+
+/* =====================================================================
+   INTERFAZ
+   ===================================================================== */
+function vista(id) { for (const v of ['vInicio','vRun','vRes']) $('#' + v).hidden = v !== id; window.scrollTo(0, 0); }
+
+function renderFases(clave) {
+  let idx = clave === 'fin' ? FASES.length : FASES.findIndex(f => f[0] === clave);
+  if (idx < 0) return;
+  const box = $('#fases'); box.innerHTML = '';
+  FASES.forEach(([k, n], i) => {
+    const om = S.omit.has(k);
+    const st = i < idx ? (om ? 'omitido' : 'hecho') : i === idx ? 'activo' : (om ? 'omitido' : 'pendiente');
+    const c = el('span', { class: 'c', html: st === 'hecho' ? ico('ok') : '' });
+    const f = el('span', { class: 'fase ' + st }, c, n);
+    box.append(f);
+    if (st === 'activo') requestAnimationFrame(() => f.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }));
+  });
+  $('#pbTotal').style.width = Math.round(idx / FASES.length * 100) + '%';
+  if (idx < FASES.length) { $('#txtPaso').textContent = `Paso ${idx + 1} de ${FASES.length} · ${FASES[idx][1]}`; $('#txtFase').textContent = FASES[idx][1]; }
+  else $('#txtPaso').textContent = 'Revisión completada';
+}
+function setFase(k) { chk(); S.faseUi = k; renderFases(k); det(''); prog(0); }
+function det(t) { $('#txtFaseDet').textContent = t; }
+function prog(p) { $('#pbFase').style.width = Math.max(0, Math.min(100, p)) + '%'; }
+function chk() { if (S.abort) throw ABORT; }
+
+function filaCheck(c) {
+  const txt = { OK: 'Correcto', ATENCION: 'Aviso', FALLO: 'Fallo' }[c.estado] || 'Info';
+  const icn = { OK: 'ok', ATENCION: 'warn', FALLO: 'fail' }[c.estado] || 'info';
+  return el('div', { class: 'chk' },
+    el('span', { class: 'pill ' + c.estado, html: ico(icn) + esc(txt) }),
+    el('div', { class: 'min0' }, el('div', { class: 'pt' }, c.prueba), c.detalle ? el('div', { class: 'dt' }, c.detalle) : null, el('div', { class: 'ar' }, c.area))
+  );
+}
+function addCheck(area, prueba, estado, detalle) {
+  const c = { area, prueba, estado, detalle: String(detalle ?? '') };
+  S.checks.push(c);
+  if (S.n[estado] != null) S.n[estado]++;
+  $('#cntOk').textContent = S.n.OK; $('#cntAt').textContent = S.n.ATENCION; $('#cntFa').textContent = S.n.FALLO;
+  $('#listaChecks').append(filaCheck(c));
+  if (!$('#vRun').hidden && $('#sheet').hidden) window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  return c;
+}
+
+/* ---------- Diálogos ---------- */
+const O = (t, v, st = '') => ({ t, v, st });
+function pintaDialogo(pref, titulo, texto, icono, body) {
+  $('#' + pref + 'Ico').innerHTML = ico(icono || 'info');
+  $('#' + pref + 'Title').textContent = titulo;
+  const tx = $('#' + pref + 'Text'); tx.textContent = texto || ''; tx.hidden = !texto;
+  const b = $('#' + pref + 'Body'); b.innerHTML = ''; if (body) b.append(body);
+  $('#' + pref + 'Btns').innerHTML = '';
+}
+function mostrar(titulo, texto, icono, body) {           // diálogo sin botones (mientras ocurre algo)
+  pintaDialogo('sh', titulo, texto, icono, body); $('#sheet').hidden = false;
+}
+function ocultar() { $('#sheet').hidden = true; }
+function ask(titulo, texto, icono, opciones, body) {
+  chk();
+  return new Promise((res, rej) => {
+    pintaDialogo('sh', titulo, texto, icono, body);
+    const box = $('#shBtns');
+    const fin = v => { S.askRes = null; ocultar(); res(v); };
+    for (const o of opciones) {
+      const b = el('button', { type: 'button', class: 'btn ' + o.st }, o.t);
+      b.onclick = () => { if (o.valida && !o.valida()) return; fin(o.v); };
+      box.append(b);
+    }
+    S.askRes = { fin, rej: () => { S.askRes = null; ocultar(); rej(ABORT); } };
+    $('#sheet').hidden = false;
+    const p = box.lastElementChild; if (p) setTimeout(() => { if (!$('#sheet').hidden && !document.activeElement?.matches('input,textarea')) p.focus({ preventScroll: true }); }, 50);
+  }).then(v => { chk(); return v; });
+}
+function responder(v) { if (S.askRes) S.askRes.fin(v); }
+function confirmar(titulo, texto, si, no, icono = 'warn', estiloSi = 'bad') {
+  return new Promise(res => {
+    pintaDialogo('d2', titulo, texto, icono);
+    const box = $('#d2Btns');
+    const cerrar = v => { $('#dlg2').hidden = true; res(v); };
+    if (no) box.append(el('button', { type: 'button', class: 'btn', onclick: () => cerrar(false) }, no));
+    box.append(el('button', { type: 'button', class: 'btn ' + estiloSi, onclick: () => cerrar(true) }, si));
+    $('#dlg2').hidden = false;
+  });
+}
+function avisar(titulo, texto, icono = 'info') { return confirmar(titulo, texto, 'Aceptar', null, icono, 'pri'); }
+
+/* ---------- capa a pantalla completa ---------- */
+const layer = $('#layer');
+function capaOn(color = '#000') { layer.innerHTML = ''; layer.style.background = color; layer.hidden = false; nat('setImmersive', true);
+  if (!N && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); }
+function capaOff() { layer.hidden = true; layer.innerHTML = ''; layer.onclick = null; nat('setImmersive', false);
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); }
+function limpieza(f) { S.cleanups.push(f); return () => { S.cleanups = S.cleanups.filter(x => x !== f); }; }
+
+/* =====================================================================
+   DETECCIÓN DEL MÓVIL (al abrir)
+   ===================================================================== */
+const nominalRam = gb => [1, 1.5, 2, 3, 4, 6, 8, 10, 12, 16, 18, 24, 32].find(x => x >= gb - 0.05) || Math.round(gb);
+const nominalAlm = gb => [8, 16, 32, 64, 128, 256, 512, 1024, 2048].find(x => x >= gb) || Math.round(gb);
+function gpuWebgl() {
+  try { const c = document.createElement('canvas'); const g = c.getContext('webgl') || c.getContext('experimental-webgl'); if (!g) return '';
+    const d = g.getExtension('WEBGL_debug_renderer_info'); return d ? String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)) : String(g.getParameter(g.RENDERER)); } catch (e) { return ''; }
+}
+async function detectar() {
+  const eq = { marca: '', modelo: '', android: '', api: 0, parche: '', ramGB: 0, ramReal: 0, almGB: 0, almLibre: 0, soc: '', nucleos: navigator.hardwareConcurrency || 0, pantalla: '', gpu: gpuWebgl(), info: null };
+  const inf = nat('getInfo');
+  if (inf) {
+    eq.info = inf;
+    eq.marca = cap1(inf.manufacturer || inf.brand || ''); eq.modelo = inf.model || '';
+    eq.android = inf.release || ''; eq.api = inf.sdk || 0; eq.parche = inf.securityPatch || '';
+    if (inf.ramTotal > 0) { eq.ramReal = inf.ramTotal / 2 ** 30; eq.ramGB = nominalRam(eq.ramReal); }
+    if (inf.storageTotal > 0) { eq.almGB = nominalAlm(inf.storageTotal / 1e9); eq.almLibre = inf.storageFree / 1e9; eq.almTotal = inf.storageTotal / 1e9; }
+    eq.soc = [inf.socManufacturer, inf.soc].filter(Boolean).join(' ') || inf.hardware || '';
+    eq.pantalla = `${inf.screenW}×${inf.screenH} px` + (inf.refresh ? ` · ${Math.round(inf.refresh)} Hz` : '');
+  } else {
+    const ua = navigator.userAgent;
+    const m = ua.match(/Android\s([\d.]+)(?:;\s*([^;)]+))?/);
+    if (m) { eq.android = m[1]; if (m[2] && m[2].trim() !== 'K') eq.modelo = m[2].replace(/\sBuild.*$/, '').trim(); }
+    else if (/iPhone|iPad/.test(ua)) { eq.marca = 'Apple'; eq.modelo = /iPad/.test(ua) ? 'iPad' : 'iPhone'; const v = ua.match(/OS (\d+[_\d]*)/); if (v) eq.android = 'iOS ' + v[1].replace(/_/g, '.'); }
+    try {
+      if (navigator.userAgentData?.getHighEntropyValues) {
+        const h = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion', 'platform']);
+        if (h.model) eq.modelo = h.model;
+        if (h.platform === 'Android' && h.platformVersion) eq.android = h.platformVersion.replace(/\.0(\.0)?$/, '');
+      }
+    } catch (e) {}
+    if (navigator.deviceMemory) eq.ramGB = navigator.deviceMemory;
+    eq.pantalla = `${Math.round(screen.width * devicePixelRatio)}×${Math.round(screen.height * devicePixelRatio)} px`;
+  }
+  return eq;
+}
+function nombreEquipo(eq) { return `${eq.marca} ${eq.modelo}`.trim() || 'Móvil sin identificar'; }
+function sistemaTxt(eq) { return eq.android ? (/^iOS/.test(eq.android) ? eq.android : 'Android ' + eq.android) : ''; }
+
+async function iniciarPantalla() {
+  $('#avisoWeb').hidden = !!N;
+  $('#inOperario').value = lsGet('vpc_operario', '') || '';
+  const seg = lsGet('vpc_segcpu', 60); S.segCPU = [30, 60, 120, 300].includes(seg) ? seg : 60;
+  marcaSeg(); actualizaEstimacion(); actualizaEstadoCorto();
+  try { S.eq = await detectar(); } catch (e) { S.eq = { marca: '', modelo: '', nucleos: 0, pantalla: '' }; }
+  const eq = S.eq;
+  $('#txtEquipo').textContent = nombreEquipo(eq);
+  $('#txtEquipoSub').textContent = [sistemaTxt(eq), eq.ramGB ? (N ? '' : '≈ ') + eq.ramGB + ' GB RAM' : '', eq.almGB ? eq.almGB + ' GB' : '', eq.nucleos ? eq.nucleos + ' núcleos' : ''].filter(Boolean).join('  ·  ');
+  $('#btnIniciar').disabled = false;
+}
+function marcaSeg() { document.querySelectorAll('#segCPU button').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.s === S.segCPU))); }
+function actualizaEstimacion() {
+  const r = $('#chkRapida').checked;
+  $('#panelCPU').classList.toggle('dis', r);
+  const min = Math.ceil((S.segCPU + 40) / 60);
+  $('#txtEstimacion').textContent = r ? 'Pruebas automáticas: menos de 1 minuto, más las pruebas manuales (unos 5 minutos).'
+    : `Pruebas automáticas: unos ${min} minuto${min > 1 ? 's' : ''}, más las pruebas manuales (unos 5 minutos).`;
+}
+
+/* =====================================================================
+   FLUJO PRINCIPAL
+   ===================================================================== */
+const COLUMNAS = ['Fecha','Operario','IMEI_Serie','Marca','Modelo','Android','RAM_GB','Almacenamiento_GB','Bateria_Salud_pct','Bateria_Ciclos',
+  'Rendimiento_pct','Pantalla','Tactil','Multitactil','Sensores','Altavoz','Auricular','Vibracion','Microfono','Camara_Trasera','Camara_Frontal',
+  'Flash','Botones','Carga','Jack','SIM','Biometria','Bloqueos','Estetica','Notas','Fallos','Avisos','Resultado','Grado_Sugerido'];
+
+async function comenzar() {
+  const operario = $('#inOperario').value.trim(), serie = $('#inSerie').value.trim();
+  const err = $('#errInicio');
+  if (!operario) { err.textContent = 'Escribe el nombre del operario.'; err.hidden = false; $('#inOperario').focus(); return; }
+  if (!serie) { err.textContent = 'Escribe el IMEI o el nº de serie (marca *#06# para verlo).'; err.hidden = false; $('#inSerie').focus(); return; }
+  err.hidden = true;
+  lsSet('vpc_operario', operario);
+  audioCtx();                                   // el audio necesita el toque del usuario
+  try { if (navigator.wakeLock) S.wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+
+  const eq = S.eq || await detectar();
+  Object.assign(S, { checks: [], n: { OK: 0, ATENCION: 0, FALLO: 0 }, abort: false, running: true, inicio: Date.now(), pend: null, cleanups: [], internet: '', operario, serie, rendPct: '' });
+  S.omit = new Set(); if ($('#chkRapida').checked) S.omit.add('estres');
+  const R = {}; COLUMNAS.forEach(k => R[k] = '');
+  Object.assign(R, { Fecha: fechaHora(new Date()), Operario: operario, IMEI_Serie: serie, Marca: eq.marca, Modelo: eq.modelo, Android: eq.android, RAM_GB: eq.ramGB || '', Almacenamiento_GB: eq.almGB || '' });
+  S.res = R;
+
+  $('#listaChecks').innerHTML = ''; $('#cntOk').textContent = $('#cntAt').textContent = $('#cntFa').textContent = '0';
+  $('#txtEqRun').textContent = nombreEquipo(eq);
+  $('#txtEqRunSub').textContent = `${serie}  ·  ${sistemaTxt(eq) || 'Sistema desconocido'}  ·  Operario: ${operario}`;
+  $('#progreso').hidden = false; $('#btnCancelar').hidden = false;
+  vista('vRun');
+  const reloj = setInterval(() => { const s = Math.floor((Date.now() - S.inicio) / 1000); $('#txtTiempo').textContent = `Tiempo ${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }, 1000);
+  try {
+    await faseIdent(); await faseSistema(); await faseBateria(); await faseRed(); await faseEstres();
+    await fasePantalla(); await faseTactil(); await faseSensores(); await faseAudio(); await faseMicro();
+    await faseCamaras(); await faseBotones(); await fasePuertos(); await faseCuentas();
+    const est = await faseEstetica();
+    setFase('informe'); det('Generando el informe…'); await sleep(250);
+    completar(est);
+    renderFases('fin');
+    S.running = false;
+    await mostrarFinal();
+  } catch (e) {
+    if (e !== ABORT) {
+      console.error(e);
+      ocultar(); capaOff();
+      await avisar('Error durante la revisión', 'Se produjo un error: ' + (e && e.message || e) + '\n\nPuedes volver a empezar la revisión.', 'fail');
+    }
+    volverInicio();
+  } finally {
+    clearInterval(reloj);
+    S.running = false; $('#btnCancelar').hidden = true;
+    for (const f of S.cleanups.splice(0)) { try { f(); } catch (e) {} }
+    try { S.wake && S.wake.release(); } catch (e) {} S.wake = null;
+  }
+}
+function volverInicio() { ocultar(); capaOff(); $('#progreso').hidden = true; $('#btnCancelar').hidden = true; vista('vInicio'); }
+async function cancelar() {
+  if (!S.running) return;
+  const ok = await confirmar('¿Cancelar la revisión en curso?', 'No se guardará ningún informe.', 'Cancelar revisión', 'Seguir con la revisión');
+  if (!ok || !S.running) return;
+  S.abort = true;
+  for (const f of S.cleanups.splice(0)) { try { f(); } catch (e) {} }
+  if (S.askRes) S.askRes.rej();
+  capaOff(); ocultar();
+}
+
+/* ---------- 1. Identificación ---------- */
+async function faseIdent() {
+  setFase('ident'); const e = S.eq;
+  addCheck('Identificación', 'Móvil', 'INFO', `${nombreEquipo(e)} | IMEI/Serie: ${S.serie}` + (e.info?.device ? ` | Código: ${e.info.device}` : ''));
+  const cpu = [e.soc, e.nucleos ? e.nucleos + ' núcleos' : ''].filter(Boolean).join(' · ');
+  if (cpu) addCheck('Identificación', 'Procesador', 'INFO', cpu);
+  addCheck('Identificación', 'Pantalla', 'INFO', e.pantalla + (e.gpu ? ' · GPU ' + e.gpu : ''));
+  await sleep(300);
+}
+
+/* ---------- 2. Sistema, memoria y almacenamiento ---------- */
+function mesesDesde(iso) { const m = /^(\d{4})-(\d{2})/.exec(iso || ''); if (!m) return null; const d = new Date(); return (d.getFullYear() - +m[1]) * 12 + (d.getMonth() + 1 - +m[2]); }
+async function faseSistema() {
+  setFase('sistema'); det('Leyendo información del sistema…'); prog(30);
+  const e = S.eq;
+  if (e.api) {
+    const viejo = e.api < CFG.Android_MinApi;
+    addCheck('Sistema', 'Versión de Android', viejo ? 'ATENCION' : 'OK', `Android ${e.android} (API ${e.api})` + (viejo ? ' · versión antigua, ya sin actualizaciones de seguridad' : ''));
+    const m = mesesDesde(e.parche);
+    if (m != null) addCheck('Sistema', 'Parche de seguridad', m > CFG.Parche_MesesAviso ? 'ATENCION' : 'OK', `${e.parche} (hace ${m} meses)` + (m > CFG.Parche_MesesAviso ? ' · comprueba si hay actualizaciones' : ''));
+  } else if (e.android) addCheck('Sistema', 'Versión del sistema', 'INFO', sistemaTxt(e));
+  prog(60);
+  if (e.ramReal) addCheck('Memoria', 'Capacidad RAM', e.ramGB < CFG.RAM_MinimaGB ? 'ATENCION' : 'OK', `${e.ramGB} GB (${e.ramReal.toFixed(1)} GB disponibles para el sistema)`);
+  else addCheck('Memoria', 'Capacidad RAM', 'INFO', e.ramGB ? `Al menos ${e.ramGB} GB (el navegador solo da un valor aproximado)` : 'No disponible en el navegador');
+  if (e.almTotal) {
+    const pct = Math.round(e.almLibre / e.almTotal * 100);
+    addCheck('Almacenamiento', 'Capacidad', pct < CFG.Almac_LibreMinPct ? 'ATENCION' : 'OK', `${e.almGB} GB · ${e.almLibre.toFixed(1)} GB libres (${pct} %)` + (pct < CFG.Almac_LibreMinPct ? ' · casi lleno: ¿está restablecido?' : ''));
+  } else addCheck('Almacenamiento', 'Capacidad', 'INFO', 'Solo se puede leer desde la app instalada');
+  prog(100); await sleep(250);
+}
+
+/* ---------- 3. Batería ---------- */
+async function leerCarga() {
+  const b = nat('getBattery'); if (b) return { nivel: b.level, cargando: b.plugged > 0, via: b.pluggedTxt };
+  if (bateriaWeb) return { nivel: Math.round(bateriaWeb.level * 100), cargando: bateriaWeb.charging, via: '' };
+  return null;
+}
+async function faseBateria() {
+  setFase('bat'); det('Leyendo la batería…'); prog(20);
+  const b = nat('getBattery'); let est = null;
+  if (b) {
+    const salud = { 2: ['OK', 'Buena'], 3: ['FALLO', 'Sobrecalentada'], 4: ['FALLO', 'Agotada (dead)'], 5: ['FALLO', 'Sobretensión'], 6: ['FALLO', 'Fallo de la batería'], 7: ['ATENCION', 'Demasiado fría'] }[b.health] || ['INFO', 'Desconocido'];
+    addCheck('Batería', 'Estado que informa Android', salud[0], salud[1]);
+    if (b.designMah > 0 && b.fullMah > 0 && b.level >= 15) { const p = Math.round(b.fullMah / b.designMah * 100); if (p >= 30 && p <= 125) est = Math.min(100, p); }
+    if (b.cycles >= 0) { S.res.Bateria_Ciclos = b.cycles; addCheck('Batería', 'Ciclos de carga', b.cycles >= CFG.Bateria_CiclosAviso ? 'ATENCION' : 'OK', `${b.cycles} ciclos`); }
+    if (b.tempC) addCheck('Batería', 'Temperatura', b.tempC >= CFG.Temp_Fallo ? 'FALLO' : b.tempC >= CFG.Temp_Atencion ? 'ATENCION' : 'OK', `${b.tempC.toFixed(1)} °C en reposo`);
+    S.batIni = b;
+  }
+  prog(50);
+  // Salud: el operario la copia de Ajustes (dato fiable); si no hay, usamos la estimación
+  const inp = el('input', { type: 'number', id: 'inSalud', inputmode: 'numeric', min: '1', max: '100', placeholder: 'Ej.: 87', value: '' });
+  const err = el('p', { class: 'err', hidden: true }, 'Escribe un número entre 1 y 100.');
+  const body = el('div', {},
+    el('label', { class: 'lbl', for: 'inSalud', style: 'margin-top:0' }, 'Salud de la batería (%)'), inp, err,
+    el('p', { class: 'hint' }, 'Dónde verlo: Samsung › Ajustes › Batería › Información de la batería · Pixel › Ajustes › Batería › Estado de la batería · Xiaomi › Ajustes › Batería · iPhone › Ajustes › Batería › Estado y carga.'),
+    est != null ? el('p', { class: 'hint' }, `Estimación de vPCheck a partir del contador de carga: ${est} % (aproximada).`) : null);
+  const r = await ask('Salud de la batería', 'Si el móvil muestra la salud de la batería en Ajustes, escríbela aquí. Es el dato más fiable.', 'bat',
+    [O('No disponible', 'nd'), O('Guardar', 'ok', 'pri')].map(o => o.v === 'ok' ? { ...o, valida: () => { const v = +inp.value; const okv = v >= 1 && v <= 100; err.hidden = okv; return okv; } } : o), body);
+  if (r === 'ok') {
+    const v = Math.round(+inp.value); S.res.Bateria_Salud_pct = v;
+    addCheck('Batería', 'Salud', v >= CFG.Bateria_OK ? 'OK' : v >= CFG.Bateria_Minimo ? 'ATENCION' : 'FALLO', `${v} % de la capacidad original (dato de Ajustes)`);
+  } else if (est != null) {
+    S.res.Bateria_Salud_pct = est + ' (est.)';
+    addCheck('Batería', 'Salud (estimada)', est >= CFG.Bateria_OK ? 'OK' : 'ATENCION', `≈ ${est} % de la capacidad original (${Math.round(b.fullMah)} de ${Math.round(b.designMah)} mAh). Estimación aproximada: confírmala en Ajustes si puedes`);
+  } else {
+    addCheck('Batería', 'Salud', 'ATENCION', 'No se pudo leer la salud. Compruébala en Ajustes › Batería o con una app de diagnóstico.');
+  }
+  const c = await leerCarga();
+  if (c) addCheck('Batería', 'Estado actual', 'INFO', `Carga ${c.nivel} %, ${c.cargando ? 'cargando' + (c.via ? ' (' + c.via + ')' : '') : 'sin cargar'}` + (b?.voltage ? ` · ${(b.voltage / 1000).toFixed(2)} V` : '') + (b?.technology ? ` · ${b.technology}` : ''));
+  prog(100);
+}
+
+/* ---------- 4. Red y conectividad ---------- */
+async function fetchT(url, opt, ms) { const c = new AbortController(); const t = setTimeout(() => c.abort(), ms); try { return await fetch(url, { ...opt, signal: c.signal }); } finally { clearTimeout(t); } }
+async function medirLatencia() {
+  const urls = [['https://speed.cloudflare.com/__down?bytes=0', 'cors'], ['https://www.google.com/generate_204', 'no-cors']];
+  for (const [u, mode] of urls) {
+    const ts = [];
+    for (let i = 0; i < 5; i++) { const t = performance.now(); try { await fetchT(u + (u.includes('?') ? '&' : '?') + 'r=' + Math.random(), { cache: 'no-store', mode }, 5000); ts.push(performance.now() - t); } catch (e) {} chk(); }
+    if (ts.length) { const v = ts.length > 1 ? ts.slice(1) : ts; return { media: Math.round(v.reduce((a, b) => a + b, 0) / v.length), rec: ts.length, host: new URL(u).host }; }
+  }
+  return null;
+}
+async function medirDescarga() {
+  const c = new AbortController(); const t0 = performance.now(); let tot = 0;
+  const stop = limpieza(() => c.abort());
+  try {
+    const r = await fetch('https://speed.cloudflare.com/__down?bytes=60000000&r=' + Math.random(), { cache: 'no-store', signal: c.signal });
+    if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+    const rd = r.body.getReader();
+    while (true) {
+      const { done, value } = await rd.read(); if (done) break;
+      tot += value.length; const s = (performance.now() - t0) / 1000;
+      prog(60 + Math.min(35, s * 3.5)); det(`Midiendo la velocidad de descarga… ${(tot * 8 / s / 1e6).toFixed(0)} Mbps`);
+      if (s > 10) { c.abort(); break; }
+    }
+  } catch (e) { if (S.abort) throw ABORT; if (tot < 1e6) throw e; } finally { stop(); }
+  const s = (performance.now() - t0) / 1000; return { mbps: Math.round(tot * 8 / s / 1e6), mb: tot / 1e6, s };
+}
+async function faseRed() {
+  setFase('red'); det('Comprobando la conexión…'); prog(10);
+  const n = nat('getNet'); const conn = navigator.connection || {};
+  let via = '';
+  if (n) {
+    via = n.wifi ? 'Wi-Fi' : n.cell ? 'datos móviles' : n.eth ? 'Ethernet' : '';
+    if (n.wifi) addCheck('Red', 'Wi-Fi', 'OK', 'Conectado a una red Wi-Fi' + (n.wifiDbm ? ` · señal ${n.wifiDbm} dBm` : '') + (n.wifiMbps ? ` · enlace ${n.wifiMbps} Mbps` : ''));
+    else if (n.wifiOn) addCheck('Red', 'Wi-Fi', 'ATENCION', 'Wi-Fi activado pero sin conectar: conéctalo a la red del taller para probarlo');
+    else addCheck('Red', 'Wi-Fi', 'ATENCION', 'Wi-Fi desactivado: actívalo y conéctalo para probar la antena');
+  } else {
+    via = conn.type === 'wifi' ? 'Wi-Fi' : conn.type === 'cellular' ? 'datos móviles' : '';
+    if (via) addCheck('Red', 'Tipo de conexión', 'INFO', 'Conectado por ' + via + (conn.effectiveType ? ` (${conn.effectiveType})` : ''));
+  }
+  if (!navigator.onLine && !(n && (n.wifi || n.cell || n.eth))) {
+    addCheck('Red', 'Conexión a Internet', 'ATENCION', 'El móvil no está conectado a ninguna red: no se pudo probar la conexión'); S.internet = 'Sin conexión';
+  } else {
+    det('Comprobando el acceso a Internet…'); prog(30);
+    const l = await medirLatencia();
+    if (l) {
+      addCheck('Red', 'Conexión a Internet', l.media > 200 ? 'ATENCION' : 'OK', `Responde en ${l.media} ms de media (${l.host})` + (via ? ' vía ' + via : ''));
+      det('Midiendo la velocidad de descarga (unos segundos)…'); prog(60);
+      try {
+        const v = await medirDescarga(); S.internet = `${v.mbps} Mbps` + (via ? ' por ' + via : '');
+        addCheck('Red', 'Velocidad de descarga', v.mbps < CFG.Velocidad_MinMbps ? 'ATENCION' : 'OK', `${v.mbps} Mbps (${v.mb.toFixed(1)} MB en ${v.s.toFixed(1)} s)` + (via ? ' vía ' + via : '') + '. Depende también de la conexión del taller.');
+      } catch (e) { S.internet = 'Conectado'; addCheck('Red', 'Velocidad de descarga', 'INFO', 'No se pudo completar la prueba de descarga: ' + (e.message || e)); }
+    } else { S.internet = 'Sin acceso a Internet'; addCheck('Red', 'Conexión a Internet', 'ATENCION', 'Sin acceso a Internet desde esta red'); }
+  }
+  if (n) {
+    if (!n.btPresent) addCheck('Conectividad', 'Bluetooth', 'ATENCION', 'No se detecta Bluetooth');
+    else addCheck('Conectividad', 'Bluetooth', n.btOn ? 'OK' : 'ATENCION', n.btOn ? 'Detectado y activado' : 'Desactivado: actívalo para comprobar que enciende');
+    addCheck('Conectividad', 'NFC', 'INFO', n.nfcPresent ? (n.nfcOn ? 'Disponible y activado' : 'Disponible (desactivado)') : 'No tiene NFC');
+  }
+  // GPS
+  det('Buscando la ubicación (hasta 25 s)…'); prog(98);
+  const g = await new Promise(res => {
+    if (!navigator.geolocation) return res({ err: 0 });
+    navigator.geolocation.getCurrentPosition(p => res({ p }), e => res({ err: e.code }), { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
+  }); chk();
+  if (g.p) { const a = Math.round(g.p.coords.accuracy); addCheck('Conectividad', 'Ubicación (GPS)', a > 150 ? 'ATENCION' : 'OK', `Posición obtenida con ±${a} m de precisión` + (a > 150 ? '. Precisión baja: repite cerca de una ventana' : '')); S.res.GPS = 'OK'; }
+  else addCheck('Conectividad', 'Ubicación (GPS)', 'ATENCION', g.err === 1 ? 'Permiso de ubicación denegado: no se pudo probar' : g.err === 0 ? 'No disponible en este navegador' : 'No se obtuvo la posición: activa la ubicación del móvil y repite cerca de una ventana');
+}
+
+/* ---------- 5. Rendimiento (CPU y memoria) ---------- */
+const WORKER_CPU = `let x=0;function v(){const t=performance.now();let n=0;while(performance.now()-t<200){for(let i=0;i<5000;i++){x=Math.sqrt(x+i)*1.0000001+Math.sin(i);}n++;}postMessage(n);setTimeout(v,0);}v();`;
+async function faseEstres() {
+  setFase('estres');
+  if (S.omit.has('estres')) { addCheck('Rendimiento', 'Pruebas largas', 'INFO', 'Omitidas (modo rápido): rendimiento y memoria'); await sleep(250); return; }
+  const seg = S.segCPU, nuc = Math.max(1, navigator.hardwareConcurrency || 4);
+  const t0Bat = nat('getBattery');
+  let ws = [];
+  const url = URL.createObjectURL(new Blob([WORKER_CPU], { type: 'text/javascript' }));
+  const parar = () => { ws.forEach(w => w.terminate()); ws = []; };
+  const quita = limpieza(parar);
+  let acc = 0, muestras = [];
+  try {
+    for (let i = 0; i < nuc; i++) { const w = new Worker(url); w.onmessage = e => acc += e.data; ws.push(w); }
+  } catch (e) { parar(); quita(); addCheck('Rendimiento', 'Carga del procesador', 'ATENCION', 'No se pudo lanzar la prueba: ' + e.message); return; }
+  const t0 = performance.now(); let ult = t0;
+  while (performance.now() - t0 < seg * 1000) {
+    await sleep(1000); chk();
+    const now = performance.now(); muestras.push(acc / ((now - ult) / 1000)); acc = 0; ult = now;
+    const ref = Math.max(...muestras.slice(0, Math.max(3, Math.ceil(muestras.length * 0.2))));
+    const pct = Math.round(muestras[muestras.length - 1] / ref * 100);
+    const resta = Math.max(0, Math.round(seg - (now - t0) / 1000));
+    det(`Carga al 100 % en ${nuc} núcleos · ${resta} s restantes · rendimiento actual ${isFinite(pct) ? pct : 100} %`);
+    prog((now - t0) / (seg * 10) * 0.85);
+  }
+  parar(); quita(); URL.revokeObjectURL(url);
+  const pico = Math.max(...muestras.slice(0, Math.max(3, Math.ceil(muestras.length * 0.2))));
+  const mitad = muestras.slice(Math.floor(muestras.length / 2));
+  const sost = Math.round(mitad.reduce((a, b) => a + b, 0) / mitad.length / pico * 100);
+  const media = Math.round(muestras.reduce((a, b) => a + b, 0) / muestras.length);
+  S.rendPct = sost; S.res.Rendimiento_pct = sost;
+  addCheck('Rendimiento', 'Rendimiento sostenido', sost >= CFG.Rend_OK ? 'OK' : 'ATENCION', `${sost} % del rendimiento inicial durante la 2ª mitad de la prueba` + (sost < CFG.Rend_Aviso ? ' (bajada fuerte por temperatura: revisar)' : sost < CFG.Rend_OK ? ' (bajada notable por temperatura)' : ''));
+  addCheck('Rendimiento', 'Puntuación', 'INFO', `${media} puntos con ${nuc} núcleos (útil para comparar móviles del mismo modelo)`);
+  const t1Bat = nat('getBattery');
+  if (t0Bat?.tempC && t1Bat?.tempC) {
+    const t = t1Bat.tempC; S.tempMax = t;
+    addCheck('Rendimiento', 'Temperatura bajo carga', t >= CFG.Temp_Fallo ? 'FALLO' : t >= CFG.Temp_Atencion ? 'ATENCION' : 'OK', `Batería de ${t0Bat.tempC.toFixed(1)} °C a ${t.toFixed(1)} °C tras ${seg} s de carga`);
+  }
+  addCheck('Rendimiento', 'Estabilidad', 'OK', `El móvil completó ${seg} s de carga sin bloquearse ni reiniciarse`);
+  await testRam();
+}
+async function testRam() {
+  det('Reservando memoria para el test…'); prog(86);
+  const gb = S.eq.ramReal || S.eq.ramGB || 2;
+  const objetivo = Math.round(Math.min(384, Math.max(96, gb * 1024 * 0.06)));
+  const CH = 8 * 1024 * 1024 / 4, bl = [];
+  try { while (bl.length * 8 < objetivo) { bl.push(new Uint32Array(CH)); if (bl.length % 4 === 0) { await sleep(0); chk(); } } } catch (e) { if (e === ABORT) throw e; }
+  if (!bl.length) { addCheck('Memoria', 'Test de memoria', 'INFO', 'No se pudo reservar memoria para el test'); return; }
+  const mb = bl.length * 8, pats = [0, 0xFFFFFFFF, 0xAAAAAAAA, 0x55555555, 'dir', 'alea'];
+  const limite = 20000, t0 = performance.now(); let errores = 0, pasos = 0, total = pats.length;
+  for (let pi = 0; pi < pats.length; pi++) {
+    const p = pats[pi];
+    for (let b = 0; b < bl.length; b++) {
+      const a = bl[b];
+      if (p === 'dir') { const base = b * CH; for (let i = 0; i < CH; i++) a[i] = (base + i) >>> 0; }
+      else if (p === 'alea') { let s = (b + 1) * 2654435761 >>> 0; for (let i = 0; i < CH; i++) { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; a[i] = s; } }
+      else a.fill(p);
+      if (b % 4 === 3) { await sleep(0); chk(); }
+    }
+    for (let b = 0; b < bl.length; b++) {
+      const a = bl[b];
+      if (p === 'dir') { const base = b * CH; for (let i = 0; i < CH; i++) if (a[i] !== ((base + i) >>> 0)) errores++; }
+      else if (p === 'alea') { let s = (b + 1) * 2654435761 >>> 0; for (let i = 0; i < CH; i++) { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; if (a[i] !== s) errores++; } }
+      else { const v = p >>> 0; for (let i = 0; i < CH; i++) if (a[i] !== v) errores++; }
+      if (b % 4 === 3) { await sleep(0); chk(); }
+    }
+    pasos++; prog(86 + pasos / total * 14); det(`Test de memoria: patrón ${pasos} de ${total} · ${mb} MB`);
+    if (performance.now() - t0 > limite && pasos >= 3) { total = pasos; break; }
+  }
+  bl.length = 0;
+  addCheck('Memoria', 'Test de memoria', errores ? 'FALLO' : 'OK', errores ? `${errores} errores en ${mb} MB con ${pasos} patrones: posible RAM defectuosa` : `${mb} MB probados con ${pasos} patrones, sin errores`);
+  addCheck('Memoria', 'Cobertura del test', 'INFO', `Se probó una parte de la RAM (${mb} MB de ${S.eq.ramGB || '?'} GB). Las apps no pueden acceder a toda la memoria del móvil.`);
+}
+
+/* ---------- 6. Pantalla ---------- */
+function testColores() {
+  return new Promise((res, rej) => {
+    const cols = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000', '#808080'];
+    let i = 0; capaOn(cols[0]);
+    const aviso = el('div', { class: 'flot' }, 'Toca la pantalla para pasar al siguiente color', el('small', {}, '1 de 6 · rojo, verde, azul, blanco, negro y gris'));
+    layer.append(aviso);
+    const quita = limpieza(() => { capaOff(); rej(ABORT); });
+    layer.onclick = () => { i++; aviso.remove(); if (i >= cols.length) { quita(); capaOff(); res(); } else layer.style.background = cols[i]; };
+  });
+}
+async function fasePantalla() {
+  setFase('pantalla');
+  await ask('Prueba de pantalla', 'Se mostrarán seis colores a pantalla completa. Busca píxeles muertos, manchas, líneas, zonas más oscuras, tonos amarillentos o imágenes fantasma (quemado).\n\nToca la pantalla para pasar al siguiente color.', 'phone', [O('Empezar', 'go', 'pri')]);
+  let r;
+  do {
+    det('Mostrando colores a pantalla completa…'); await testColores();
+    r = await ask('¿Cómo está la pantalla?', '¿Está perfecta, sin píxeles muertos, manchas, líneas, zonas apagadas ni quemado?', 'phone',
+      [O('Repetir prueba', 'rep'), O('Hay defectos', 'no', 'bad'), O('Está perfecta', 'si', 'good')]);
+  } while (r === 'rep');
+  S.res.Pantalla = r === 'si' ? 'OK' : 'FALLO';
+  addCheck('Pantalla', 'Inspección visual', r === 'si' ? 'OK' : 'FALLO', r === 'si' ? 'Sin defectos apreciados' : 'Defectos detectados en la pantalla');
+  const rb = await ask('Brillo', 'Sube y baja el brillo desde los ajustes rápidos. ¿Cambia de forma uniforme, sin parpadeos?', 'phone',
+    [O('Falla', 'no', 'bad'), O('Funciona bien', 'si', 'good')]);
+  addCheck('Pantalla', 'Brillo', rb === 'si' ? 'OK' : 'FALLO', rb === 'si' ? 'Se regula correctamente' : 'El brillo no se regula bien o parpadea');
+}
+
+/* ---------- 7. Táctil ---------- */
+function testTactil() {
+  return new Promise((res, rej) => {
+    capaOn('#F3F4F6');
+    const cv = el('canvas'); layer.append(cv);
+    const W = innerWidth, H = innerHeight, dpr = devicePixelRatio || 1;
+    cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    const cols = W < 500 ? 7 : 10, cw = W / cols, rows = Math.max(8, Math.round(H / cw)), rh = H / rows, total = cols * rows;
+    const hecho = new Uint8Array(total); let n = 0;
+    const dibuja = (i) => { const x = i % cols, y = Math.floor(i / cols); g.fillStyle = hecho[i] ? '#22C55E' : '#E5E7EB'; g.fillRect(x * cw + 1.5, y * rh + 1.5, cw - 3, rh - 3); };
+    for (let i = 0; i < total; i++) dibuja(i);
+    const cont = el('b', {}, `Quedan ${total} zonas`);
+    const btn = el('button', { type: 'button', class: 'btn', style: 'pointer-events:auto' }, 'Terminar');
+    const flot = el('div', { class: 'flot', style: 'pointer-events:none' }, 'Desliza el dedo por toda la pantalla', el('small', {}, 'Cada zona que responde se pone en verde. Incluye los bordes y las esquinas.'), el('div', { style: 'margin-top:8px' }, cont), btn);
+    layer.append(flot);
+    const marca = (x, y) => { const c = Math.min(cols - 1, Math.max(0, Math.floor(x / cw))), r = Math.min(rows - 1, Math.max(0, Math.floor(y / rh))), i = r * cols + c; if (!hecho[i]) { hecho[i] = 1; n++; dibuja(i); cont.textContent = n >= total ? '¡Toda la pantalla responde!' : `Quedan ${total - n} zonas`; if (n >= total) setTimeout(() => terminar(), 400); } };
+    const tc = e => { e.preventDefault(); for (const t of e.changedTouches) marca(t.clientX, t.clientY); };
+    const pm = e => { if (e.pointerType === 'touch') return; if (e.buttons || e.type === 'pointerdown') marca(e.clientX, e.clientY); };
+    layer.addEventListener('touchstart', tc, { passive: false }); layer.addEventListener('touchmove', tc, { passive: false });
+    layer.addEventListener('pointerdown', pm); layer.addEventListener('pointermove', pm);
+    let fin = false;
+    const quita = limpieza(() => { capaOff(); rej(ABORT); });
+    async function terminar() {
+      if (fin) return;
+      if (n < total) {
+        const v = await confirmar(`Quedan ${total - n} zonas sin marcar`, 'Si no responden al tocarlas, márcalas como fallo. Si aún no has pasado el dedo por ellas, vuelve a la prueba.', 'No responden', 'Volver a la prueba');
+        if (!v || fin) return;
+      }
+      fin = true; quita(); capaOff(); res({ total, faltan: total - n });
+    }
+    btn.addEventListener('click', terminar);
+    btn.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); terminar(); });
+  });
+}
+function testMultitactil() {
+  return new Promise((res, rej) => {
+    capaOn('#111827');
+    const cv = el('canvas'); layer.append(cv);
+    const W = innerWidth, H = innerHeight, dpr = devicePixelRatio || 1; cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    let max = 0, fin = false;
+    const info = el('b', {}, 'Máximo detectado: 0');
+    const btn = el('button', { type: 'button', class: 'btn', style: 'pointer-events:auto' }, 'No llega a 5');
+    layer.append(el('div', { class: 'flot', style: 'pointer-events:none;top:22%' }, 'Apoya 5 dedos a la vez en la pantalla', el('small', {}, 'Se dibuja un círculo por cada dedo detectado.'), el('div', { style: 'margin-top:8px' }, info), btn));
+    const cols = ['#1AA7EC', '#22C55E', '#FBBF24', '#F472B6', '#A78BFA', '#FB923C', '#F87171', '#34D399', '#60A5FA', '#E879F9'];
+    const pinta = e => {
+      e.preventDefault(); g.clearRect(0, 0, W, H);
+      [...e.touches].forEach((t, i) => { g.beginPath(); g.arc(t.clientX, t.clientY, 46, 0, 7); g.fillStyle = cols[i % cols.length] + 'AA'; g.fill(); g.fillStyle = '#fff'; g.font = '600 22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(i + 1, t.clientX, t.clientY); });
+      if (e.touches.length > max) { max = e.touches.length; info.textContent = 'Máximo detectado: ' + max; if (max >= 5) setTimeout(() => cerrar(), 700); }
+    };
+    ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(t => layer.addEventListener(t, pinta, { passive: false }));
+    const quita = limpieza(() => { capaOff(); rej(ABORT); });
+    function cerrar() { if (fin) return; fin = true; quita(); capaOff(); res(max); }
+    btn.addEventListener('click', cerrar); btn.addEventListener('touchend', e => { e.stopPropagation(); e.preventDefault(); cerrar(); });
+  });
+}
+async function faseTactil() {
+  setFase('tactil');
+  await ask('Pantalla táctil', 'Pasa el dedo por toda la pantalla, incluidos los bordes, hasta que todas las zonas se pongan en verde.', 'touch', [O('Empezar', 'go', 'pri')]);
+  det('Prueba táctil en curso…');
+  const t = await testTactil();
+  S.res.Tactil = t.faltan ? 'FALLO' : 'OK';
+  addCheck('Táctil', 'Superficie táctil', t.faltan ? 'FALLO' : 'OK', t.faltan ? `${t.faltan} de ${t.total} zonas sin respuesta` : `Toda la superficie responde (${t.total} zonas)`);
+  await ask('Multitáctil', 'Ahora apoya cinco dedos a la vez para comprobar que detecta varios toques.', 'touch', [O('Empezar', 'go', 'pri')]);
+  const m = await testMultitactil();
+  S.res.Multitactil = m;
+  addCheck('Táctil', 'Multitáctil', m >= 5 ? 'OK' : m >= 2 ? 'ATENCION' : 'FALLO', `${m} toque${m === 1 ? '' : 's'} simultáneo${m === 1 ? '' : 's'} detectado${m === 1 ? '' : 's'}`);
+}
+
+/* ---------- 8. Sensores ---------- */
+async function faseSensores() {
+  setFase('sensores');
+  try { if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); } catch (e) {}
+  const lista = S.eq.info?.sensors || null;           // lo que declara el móvil (solo app)
+  const st = {
+    acc: { n: 'Acelerómetro', ev: 0, lo: [99, 99, 99], hi: [-99, -99, -99], v: '' },
+    gyr: { n: 'Giroscopio', ev: 0, max: 0, v: '' },
+    mag: { n: 'Brújula', ev: 0, sum: 0, prev: null, v: '', lo: [999, 999, 999], hi: [-999, -999, -999] },
+    prox: { n: 'Proximidad', ev: 0, lo: Infinity, hi: -Infinity, max: 0, v: '', solo: true },
+    luz: { n: 'Luz ambiental', ev: 0, lo: Infinity, hi: -Infinity, v: '', solo: true }
+  };
+  const ok = {
+    acc: s => Math.max(...s.hi.map((h, i) => h - s.lo[i])) > 4,
+    gyr: s => s.max > 45,
+    mag: s => s.sum > 45 || Math.max(...s.hi.map((h, i) => h - s.lo[i])) > 20,
+    prox: s => s.ev > 0 && s.lo < s.hi && s.lo < (s.max || s.hi) * 0.6,
+    luz: s => s.ev > 1 && (s.hi - s.lo) > Math.max(8, s.hi * 0.3)
+  };
+  const onMot = e => {
+    const a = e.accelerationIncludingGravity;
+    if (a && a.x != null) { const s = st.acc; s.ev++; [a.x, a.y, a.z].forEach((v, i) => { s.lo[i] = Math.min(s.lo[i], v); s.hi[i] = Math.max(s.hi[i], v); }); s.v = `x ${a.x.toFixed(1)}  y ${a.y.toFixed(1)}  z ${a.z.toFixed(1)} m/s²`; }
+    const r = e.rotationRate;
+    if (r && r.alpha != null) { const s = st.gyr; s.ev++; s.max = Math.max(s.max, Math.abs(r.alpha), Math.abs(r.beta || 0), Math.abs(r.gamma || 0)); s.v = `${Math.round(Math.max(Math.abs(r.alpha), Math.abs(r.beta || 0), Math.abs(r.gamma || 0)))} °/s`; }
+  };
+  const evOri = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
+  const onOri = e => {
+    const al = e.webkitCompassHeading != null ? e.webkitCompassHeading : e.alpha; if (al == null) return;
+    const s = st.mag; s.ev++; if (s.prev != null) { let d = Math.abs(al - s.prev); if (d > 180) d = 360 - d; s.sum += d; } s.prev = al; s.v = `Rumbo ${Math.round(al)}°`;
+  };
+  addEventListener('devicemotion', onMot); addEventListener(evOri, onOri);
+  const nat0 = nat('startSensors');
+  const offNat = onNat('sensor', d => {
+    if (d.t === 'prox') { const s = st.prox; s.ev++; s.max = d.max || s.max; s.lo = Math.min(s.lo, d.v); s.hi = Math.max(s.hi, d.v); s.v = (d.v < (d.max || 5) ? 'Cerca' : 'Lejos') + ` (${d.v} cm)`; }
+    if (d.t === 'acc') { const s = st.acc; s.ev++; [d.x, d.y, d.z].forEach((v, i) => { s.lo[i] = Math.min(s.lo[i], v); s.hi[i] = Math.max(s.hi[i], v); }); s.v = `x ${d.x.toFixed(1)}  y ${d.y.toFixed(1)}  z ${d.z.toFixed(1)} m/s²`; }
+    if (d.t === 'gyr') { const s = st.gyr; s.ev++; const m = Math.max(Math.abs(d.x), Math.abs(d.y), Math.abs(d.z)) * 57.2958; s.max = Math.max(s.max, m); s.v = `${Math.round(m)} °/s`; }
+    if (d.t === 'mag') { const s = st.mag; s.ev++; [d.x, d.y, d.z].forEach((v, i) => { s.lo[i] = Math.min(s.lo[i], v); s.hi[i] = Math.max(s.hi[i], v); }); s.v = `Campo magnético ${Math.round(Math.hypot(d.x, d.y, d.z))} µT`; }
+    if (d.t === 'luz') { const s = st.luz; s.ev++; s.lo = Math.min(s.lo, d.v); s.hi = Math.max(s.hi, d.v); s.v = `${Math.round(d.v)} lux`; }
+  });
+  const fin = () => { removeEventListener('devicemotion', onMot); removeEventListener(evOri, onOri); offNat(); nat('stopSensors'); };
+  const quita = limpieza(fin);
+  const presentes = k => !st[k].solo || (nat0 && nat0[k]);
+  const filas = {};
+  const body = el('div', { class: 'sens' });
+  for (const k of Object.keys(st)) {
+    if (!presentes(k)) continue;
+    const pill = el('span', { class: 'pill' }), val = el('small', {}, 'Esperando datos…');
+    filas[k] = { pill, val }; body.append(el('div', {}, el('div', { class: 'n' }, el('b', {}, st[k].n), val), pill));
+  }
+  const tick = setInterval(() => {
+    for (const [k, f] of Object.entries(filas)) {
+      const s = st[k], bien = ok[k](s);
+      f.val.textContent = s.v || 'Esperando datos…';
+      f.pill.className = 'pill ' + (bien ? 'OK' : '');
+      f.pill.innerHTML = bien ? ico('ok') + 'Responde' : s.ev ? 'Muévelo' : 'Sin datos';
+    }
+  }, 200);
+  try {
+    await ask('Sensores', 'Mueve y gira el móvil en todas las direcciones.' + (presentes('prox') ? ' Tapa con la mano la parte de arriba de la pantalla (proximidad)' : '') + (presentes('luz') ? ' y apunta el móvil a una luz.' : '.'), 'sensor', [O('Continuar', 'go', 'pri')], body);
+  } finally { clearInterval(tick); fin(); quita(); }
+  const declarado = { acc: lista?.acc, gyr: lista?.gyr, mag: lista?.mag, prox: nat0?.prox, luz: nat0?.luz };
+  let mal = 0;
+  for (const k of Object.keys(st)) {
+    if (!presentes(k)) continue;
+    const s = st[k];
+    if (ok[k](s)) { addCheck('Sensores', s.n, 'OK', 'Responde correctamente'); continue; }
+    if (lista && declarado[k] === false) { addCheck('Sensores', s.n, 'INFO', 'Este móvil no tiene ' + s.n.toLowerCase()); continue; }
+    mal++;
+    if (!s.ev) addCheck('Sensores', s.n, N ? 'FALLO' : 'ATENCION', N ? 'No envía datos' : 'El navegador no da acceso a este sensor');
+    else addCheck('Sensores', s.n, 'ATENCION', 'Envía datos pero apenas varían: repite moviendo más el móvil');
+  }
+  if (!N) addCheck('Sensores', 'Proximidad y luz', 'INFO', 'Solo se pueden probar desde la app instalada');
+  S.res.Sensores = mal ? 'REVISAR' : 'OK';
+}
+
+/* ---------- 9. Altavoces, auricular y vibración ---------- */
+function tono(f, d, pan = 0, vol = 0.7) {
+  const ac = audioCtx(); if (!ac) return sleep(d * 1000);
+  const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+  o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03); g.gain.setValueAtTime(vol, t + d - 0.05); g.gain.linearRampToValueAtTime(0, t + d);
+  o.connect(g);
+  if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(ac.destination); } else g.connect(ac.destination);
+  o.start(t); o.stop(t + d); return sleep(d * 1000 + 80);
+}
+async function melodia() { for (const f of [523, 659, 784, 1047, 1319]) await tono(f, 0.3); await tono(110, 0.9, 0, 0.9); await tono(2600, 0.5, 0, 0.5); }
+async function faseAudio() {
+  setFase('audio'); nat('setMaxVolume');
+  await ask('Altavoz principal', 'Se reproducirán varios tonos, uno grave y uno agudo.' + (N ? ' El volumen se sube automáticamente.' : ' Sube el volumen al máximo antes de empezar.'), 'audio', [O('Empezar', 'go', 'pri')]);
+  let r;
+  do {
+    mostrar('Altavoz principal', 'Reproduciendo tonos…', 'audio'); det('Reproduciendo tonos…'); await melodia(); chk();
+    r = await ask('Altavoz principal', '¿Se ha oído claro, sin vibraciones, chasquidos ni distorsión (también el tono grave)?', 'audio',
+      [O('Repetir', 'rep'), O('No se oye', 'no', 'bad'), O('Suena distorsionado', 'dist', 'bad'), O('Se oye bien', 'si', 'good')]);
+  } while (r === 'rep');
+  S.res.Altavoz = r === 'si' ? 'OK' : r === 'dist' ? 'DISTORSION' : 'FALLO';
+  addCheck('Altavoces', 'Altavoz principal', r === 'si' ? 'OK' : r === 'dist' ? 'ATENCION' : 'FALLO', r === 'si' ? 'Se oye correctamente' : r === 'dist' ? 'Suena con distorsión o vibraciones' : 'No se oye');
+
+  const st = await ask('Sonido estéreo', 'Gira el móvil en horizontal. Sonará un tono por el lado izquierdo y después por el derecho.\n\nSi el móvil tiene un solo altavoz, elige «Solo tiene un altavoz».', 'audio',
+    [O('Solo tiene un altavoz', 'mono'), O('Empezar', 'go', 'pri')]);
+  if (st === 'mono') addCheck('Altavoces', 'Estéreo', 'INFO', 'Un solo altavoz (mono)');
+  else {
+    const lados = [['IZQUIERDO', -1, 800], ['DERECHO', 1, 1200]]; const resp = [];
+    for (const [nombre, pan, f] of lados) {
+      let x;
+      do {
+        mostrar('Sonido estéreo', `Reproduciendo un tono por el lado ${nombre}…`, 'audio'); await tono(f, 1.5, pan); chk();
+        x = await ask('Sonido estéreo', `¿Has oído el tono sobre todo por el lado ${nombre}?`, 'audio', [O('Repetir tono', 'rep'), O('No / lado equivocado', 'no', 'bad'), O('Sí, correcto', 'si', 'good')]);
+      } while (x === 'rep');
+      resp.push(x);
+    }
+    const okb = resp.every(x => x === 'si');
+    addCheck('Altavoces', 'Estéreo', okb ? 'OK' : 'FALLO', okb ? 'Izquierdo y derecho se oyen correctamente' : 'Falla el lado ' + lados.filter((l, i) => resp[i] !== 'si').map(l => l[0].toLowerCase()).join(' y '));
+  }
+
+  // Auricular de llamadas
+  let ra;
+  if (N && typeof N.earpiece === 'function') {
+    await ask('Auricular', 'Sonará un tono por el auricular (el altavoz de llamadas, arriba de la pantalla). Acércate el móvil a la oreja.', 'audio', [O('Empezar', 'go', 'pri')]);
+    do {
+      mostrar('Auricular', 'Reproduciendo por el auricular… acerca la oreja a la parte de arriba.', 'audio');
+      nat('earpiece', true); const q = limpieza(() => nat('earpiece', false)); await sleep(3200); nat('earpiece', false); q(); chk();
+      ra = await ask('Auricular', '¿Se ha oído el tono por el auricular?', 'audio', [O('Repetir', 'rep'), O('No se oye', 'no', 'bad'), O('Se oye bien', 'si', 'good')]);
+    } while (ra === 'rep');
+  } else {
+    ra = await ask('Auricular', 'Haz una llamada de prueba, o escucha una nota de voz con el móvil en la oreja. ¿Se oye bien por el auricular?', 'audio',
+      [O('No lo he probado', 'np'), O('No se oye', 'no', 'bad'), O('Se oye bien', 'si', 'good')]);
+  }
+  S.res.Auricular = ra === 'si' ? 'OK' : ra === 'np' ? 'No probado' : 'FALLO';
+  addCheck('Altavoces', 'Auricular de llamadas', ra === 'si' ? 'OK' : ra === 'np' ? 'INFO' : 'FALLO', ra === 'si' ? 'Se oye correctamente' : ra === 'np' ? 'No probado' : 'No se oye por el auricular');
+
+  // Vibración
+  let rv;
+  do {
+    if (N) nat('vibrate', 1200); else if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+    rv = await ask('Vibración', N || navigator.vibrate ? 'El móvil está vibrando. ¿Lo notas?' : 'Este navegador no puede hacer vibrar el móvil. Actívala desde Ajustes › Sonido (vibrar al tocar) o con una llamada.', 'vib',
+      [O('Repetir', 'rep'), O('No vibra', 'no', 'bad'), O('Vibra bien', 'si', 'good')]);
+  } while (rv === 'rep');
+  S.res.Vibracion = rv === 'si' ? 'OK' : 'FALLO';
+  addCheck('Vibración', 'Motor de vibración', rv === 'si' ? 'OK' : 'FALLO', rv === 'si' ? 'Vibra correctamente' : 'No vibra');
+}
+
+/* ---------- 10. Micrófono ---------- */
+async function grabar(stream, ms, barra, cuenta) {
+  const ac = audioCtx(); const src = ac.createMediaStreamSource(stream); const an = ac.createAnalyser(); an.fftSize = 1024; src.connect(an);
+  const buf = new Float32Array(an.fftSize); let pico = 0;
+  let rec = null, partes = [], parado = Promise.resolve();
+  if (window.MediaRecorder) { rec = new MediaRecorder(stream); rec.ondataavailable = e => e.data.size && partes.push(e.data); parado = new Promise(r => rec.onstop = r); rec.start(); }
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) {
+    an.getFloatTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    const rms = Math.sqrt(s / buf.length); pico = Math.max(pico, rms);
+    barra.style.width = Math.min(100, rms * 500) + '%'; cuenta.textContent = `Grabando… ${Math.ceil((ms - (performance.now() - t0)) / 1000)} s`;
+    await sleep(50); if (S.abort) { try { rec && rec.stop(); } catch (e) {} throw ABORT; }
+  }
+  if (rec) { rec.stop(); await parado; }
+  src.disconnect(); barra.style.width = '0';
+  return { blob: rec ? new Blob(partes, { type: rec.mimeType || 'audio/webm' }) : null, pico };
+}
+async function faseMicro() {
+  setFase('micro');
+  await ask('Micrófono', 'Se grabarán 4 segundos. Durante la grabación, habla cerca del micrófono (parte de abajo): «uno, dos, tres, probando».', 'mic', [O('Empezar a grabar', 'go', 'pri')]);
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch (e) {
+    S.res.Microfono = 'No probado';
+    addCheck('Micrófono', 'Grabación', 'ATENCION', e.name === 'NotAllowedError' ? 'Permiso de micrófono denegado: no se pudo probar' : 'No se pudo abrir el micrófono: ' + (e.message || e.name)); return;
+  }
+  const parar = () => stream.getTracks().forEach(t => t.stop());
+  const quita = limpieza(parar);
+  let r, pico = 0;
+  try {
+    do {
+      const barra = el('i'), cuenta = el('b', {}, 'Grabando…');
+      mostrar('Micrófono', 'Habla ahora cerca del micrófono.', 'mic', el('div', {}, el('div', { class: 'medidor' }, barra), el('p', { class: 'hint' }, cuenta)));
+      const g = await grabar(stream, 4000, barra, cuenta); pico = Math.max(pico, g.pico);
+      if (g.blob && g.blob.size) {
+        mostrar('Micrófono', 'Reproduciendo la grabación…', 'mic');
+        const url = URL.createObjectURL(g.blob); const a = new Audio(url);
+        await Promise.race([new Promise(res => { a.onended = res; a.onerror = res; a.play().catch(res); }), sleep(6500)]);
+        a.pause(); URL.revokeObjectURL(url); chk();
+        r = await ask('Micrófono', '¿Se oye tu voz con claridad en la grabación?', 'mic', [O('Repetir', 'rep'), O('No se oye o hay ruido', 'no', 'bad'), O('Se oye bien', 'si', 'good')]);
+      } else {
+        r = await ask('Micrófono', 'Este navegador no puede reproducir la grabación. ¿La barra de nivel se movía al hablar?', 'mic', [O('Repetir', 'rep'), O('No se movía', 'no', 'bad'), O('Sí se movía', 'si', 'good')]);
+      }
+    } while (r === 'rep');
+  } finally { parar(); quita(); }
+  S.res.Microfono = r === 'si' ? 'OK' : 'FALLO';
+  addCheck('Micrófono', 'Grabación', r === 'si' ? 'OK' : 'FALLO', r === 'si' ? 'Graba con claridad' : 'No graba o la grabación tiene ruido');
+  if (pico < 0.015) addCheck('Micrófono', 'Nivel de señal', 'ATENCION', 'Nivel muy bajo: puede estar sucio u obstruido');
+}
+
+/* ---------- 11. Cámaras ---------- */
+function testCamara(facing) {
+  return new Promise(async (res, rej) => {
+    let stream = null, track = null, devs = [], idx = -1, torch = false, fin = false;
+    capaOn('#000');
+    const video = el('video', { playsinline: true, autoplay: true, muted: true });
+    const lbl = el('small', {}, 'Abriendo la cámara…');
+    const bLente = el('button', { type: 'button', class: 'btn ghost', hidden: true }, 'Siguiente cámara');
+    const bFlash = el('button', { type: 'button', class: 'btn ghost', hidden: true, 'aria-pressed': 'false' }, 'Flash');
+    const bNo = el('button', { type: 'button', class: 'btn bad' }, 'No funciona');
+    const bSi = el('button', { type: 'button', class: 'btn good' }, 'Se ve bien');
+    layer.append(video, el('div', { class: 'cam-top' }, el('b', {}, facing === 'user' ? 'Cámara frontal' : 'Cámara trasera'), lbl),
+      el('div', { class: 'cam-bar' }, el('div', { class: 'cam-row' }, bLente, bFlash), el('div', { class: 'cam-row' }, bNo, bSi)));
+    const parar = () => { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; track = null; };
+    const quita = limpieza(() => { parar(); capaOff(); rej(ABORT); });
+    const terminar = v => { if (fin) return; fin = true; parar(); quita(); capaOff(); res(v); };
+    async function abrir(c) {
+      parar(); stream = await navigator.mediaDevices.getUserMedia({ video: c, audio: false });
+      if (fin) { parar(); return; }
+      track = stream.getVideoTracks()[0]; video.srcObject = stream; await video.play().catch(() => {});
+      const s = track.getSettings ? track.getSettings() : {}; const caps = track.getCapabilities ? track.getCapabilities() : {};
+      lbl.textContent = [track.label, s.width ? `${s.width}×${s.height}` : ''].filter(Boolean).join(' · ');
+      torch = false; bFlash.setAttribute('aria-pressed', 'false'); bFlash.hidden = !caps.torch;
+    }
+    try { await abrir({ facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } }); }
+    catch (e) { terminar({ r: 'err', err: e.name || 'Error', msg: e.message }); return; }
+    try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'); } catch (e) {}
+    const delLado = devs.filter(d => facing === 'user' ? /front|frontal|user|delant/i.test(d.label) : !/front|frontal|user|delant/i.test(d.label));
+    const usar = delLado.length > 1 ? delLado : [];
+    if (usar.length > 1) { bLente.hidden = false; bLente.textContent = `Siguiente cámara (${usar.length})`; }
+    bLente.onclick = async () => { idx = (idx + 1) % usar.length; try { await abrir({ deviceId: { exact: usar[idx].deviceId }, width: { ideal: 1920 } }); } catch (e) { lbl.textContent = 'No se pudo abrir esta cámara: ' + e.name; } };
+    bFlash.onclick = async () => { try { torch = !torch; await track.applyConstraints({ advanced: [{ torch }] }); bFlash.setAttribute('aria-pressed', String(torch)); } catch (e) { bFlash.hidden = true; } };
+    bNo.onclick = () => terminar({ r: 'no', lentes: usar.length });
+    bSi.onclick = async () => {
+      const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+      let flash = null;
+      if (facing === 'environment' && caps.torch) {
+        try { await track.applyConstraints({ advanced: [{ torch: true }] }); } catch (e) {}
+        flash = await confirmarFlash();
+        try { track && await track.applyConstraints({ advanced: [{ torch: false }] }); } catch (e) {}
+      }
+      terminar({ r: 'si', flash, lentes: usar.length });
+    };
+  });
+}
+function confirmarFlash() {
+  return new Promise(res => {
+    pintaDialogo('d2', 'Flash', '¿Se ha encendido el flash (linterna) de la cámara trasera?', 'bolt');
+    const box = $('#d2Btns'); const c = v => { $('#dlg2').hidden = true; res(v); };
+    box.append(el('button', { type: 'button', class: 'btn bad', onclick: () => c('no') }, 'No se enciende'), el('button', { type: 'button', class: 'btn good', onclick: () => c('si') }, 'Sí, se enciende'));
+    $('#dlg2').hidden = false;
+  });
+}
+function resCamara(nombre, r) {
+  if (r.r === 'err') {
+    const perm = r.err === 'NotAllowedError' || r.err === 'SecurityError';
+    addCheck('Cámaras', nombre, perm ? 'ATENCION' : 'FALLO', perm ? 'Permiso de cámara denegado: no se pudo probar' : r.err === 'NotReadableError' ? 'La cámara no se puede abrir (en uso por otra app o averiada)' : 'No se detecta la cámara (' + r.err + ')');
+    return perm ? 'No probado' : 'FALLO';
+  }
+  addCheck('Cámaras', nombre, r.r === 'si' ? 'OK' : 'FALLO', r.r === 'si' ? 'Imagen correcta' + (r.lentes > 1 ? ` (${r.lentes} cámaras comprobadas)` : '') : 'No funciona o la imagen es defectuosa');
+  return r.r === 'si' ? 'OK' : 'FALLO';
+}
+async function faseCamaras() {
+  setFase('camara');
+  if (!navigator.mediaDevices?.getUserMedia) { addCheck('Cámaras', 'Cámaras', 'ATENCION', 'Este navegador no permite abrir la cámara'); S.res.Camara_Trasera = S.res.Camara_Frontal = 'No probado'; return; }
+  await ask('Cámaras', 'Se abrirá la cámara trasera y después la frontal. Comprueba que la imagen es nítida, que enfoca al acercarte a un objeto y que no hay manchas ni puntos.\n\nSi tiene varias cámaras traseras, usa «Siguiente cámara» para revisarlas todas.', 'cam', [O('Empezar', 'go', 'pri')]);
+  det('Cámara trasera…');
+  const tr = await testCamara('environment');
+  S.res.Camara_Trasera = resCamara('Cámara trasera', tr);
+  // Flash
+  let fl = tr.flash;
+  if (fl == null && tr.r !== 'err') {
+    const tiene = S.eq.info ? S.eq.info.hasFlash : null;
+    if (tiene === false) fl = 'nt';
+    else if (tiene && N) {
+      let x;
+      do { nat('torch', true); x = await ask('Flash', 'Se ha encendido la linterna. ¿La ves encendida?', 'bolt', [O('Repetir', 'rep'), O('No se enciende', 'no', 'bad'), O('Sí, se enciende', 'si', 'good')]); nat('torch', false); } while (x === 'rep');
+      fl = x;
+    } else fl = await ask('Flash', 'Enciende la linterna desde los ajustes rápidos. ¿Funciona?', 'bolt', [O('No tiene flash', 'nt'), O('No funciona', 'no', 'bad'), O('Funciona', 'si', 'good')]);
+  }
+  if (fl) { S.res.Flash = fl === 'si' ? 'OK' : fl === 'nt' ? 'No tiene' : 'FALLO'; addCheck('Cámaras', 'Flash', fl === 'si' ? 'OK' : fl === 'nt' ? 'INFO' : 'FALLO', fl === 'si' ? 'Se enciende correctamente' : fl === 'nt' ? 'No tiene flash' : 'No se enciende'); }
+  det('Cámara frontal…');
+  const fr = await testCamara('user');
+  S.res.Camara_Frontal = resCamara('Cámara frontal', fr);
+}
+
+/* ---------- 12. Botones ---------- */
+async function faseBotones() {
+  setFase('botones');
+  const teclas = [{ k: 'up', n: 'Subir volumen' }, { k: 'down', n: 'Bajar volumen' }, { k: 'power', n: 'Encendido' }];
+  const est = {}; teclas.forEach(t => est[t.k] = { done: false, man: false });
+  const grid = el('div', { class: 'teclas' });
+  const btns = {};
+  const marcar = (k, manual) => { const s = est[k]; if (!s || s.done) return; s.done = true; s.man = manual; btns[k].classList.add(manual ? 'man' : 'det'); };
+  teclas.forEach(t => { const b = el('button', { type: 'button', class: 'tecla', onclick: () => marcar(t.k, true) }, t.n); btns[t.k] = b; grid.append(b); });
+  const body = el('div', {}, grid, el('p', { class: 'hint' }, N
+    ? 'Cada botón detectado se pone en verde. Para el de encendido, apaga la pantalla y vuelve a encenderla. Si alguno no se detecta, compruébalo a mano y tócalo: se pondrá en amarillo.'
+    : 'En el navegador los botones de volumen casi nunca se detectan: si funcionan (cambia el volumen), tócalos aquí y se pondrán en amarillo. Para el de encendido, apaga la pantalla y vuelve a encenderla.'));
+  nat('captureKeys', true);
+  const mapa = { KEYCODE_VOLUME_UP: 'up', KEYCODE_VOLUME_DOWN: 'down', AudioVolumeUp: 'up', AudioVolumeDown: 'down', VolumeUp: 'up', VolumeDown: 'down' };
+  const offK = onNat('key', d => mapa[d.k] && marcar(mapa[d.k], false));
+  const kd = e => { if (mapa[e.key]) { marcar(mapa[e.key], false); e.preventDefault(); } };
+  let oculto = false;
+  const vis = () => { if (document.hidden) oculto = true; else if (oculto) marcar('power', false); };
+  const offP = onNat('pause', () => oculto = true), offR = onNat('resume', () => oculto && marcar('power', false));
+  addEventListener('keydown', kd); document.addEventListener('visibilitychange', vis);
+  const fin = () => { nat('captureKeys', false); offK(); offP(); offR(); removeEventListener('keydown', kd); document.removeEventListener('visibilitychange', vis); };
+  const quita = limpieza(fin);
+  try { await ask('Botones físicos', 'Pulsa los botones de subir y bajar volumen y el de encendido.', 'botones', [O('Terminar prueba', 'go', 'pri')], body); }
+  finally { fin(); quita(); }
+  const faltan = teclas.filter(t => !est[t.k].done).map(t => t.n), man = teclas.filter(t => est[t.k].man).map(t => t.n);
+  S.res.Botones = faltan.length ? 'FALLO' : 'OK';
+  if (!faltan.length) addCheck('Botones', 'Volumen y encendido', 'OK', 'Todos responden' + (man.length ? '; marcados a mano: ' + man.join(', ') : ''));
+  else addCheck('Botones', 'Volumen y encendido', 'FALLO', 'Sin respuesta: ' + faltan.join(', '));
+}
+
+/* ---------- 13. Carga y conexiones ---------- */
+async function fasePuertos() {
+  setFase('puertos');
+  // Puerto de carga
+  const c0 = await leerCarga();
+  if (c0) {
+    const linea = el('div', { class: 'estado-line' }, el('span', { class: 'dot' }), el('span', {}, ''));
+    const txt = linea.lastChild;
+    let vistoSin = !c0.cargando, hecho = false, via = '';
+    const t = setInterval(async () => {
+      const c = await leerCarga(); if (!c) return;
+      linea.classList.toggle('on', c.cargando); txt.textContent = c.cargando ? 'Cargando' + (c.via ? ' (' + c.via + ')' : '') + ` · ${c.nivel} %` : `Sin cargar · ${c.nivel} %`;
+      if (!c.cargando) vistoSin = true;
+      if (vistoSin && c.cargando && !hecho) { hecho = true; via = c.via; setTimeout(() => responder('si'), 900); }
+    }, 500);
+    const quita = limpieza(() => clearInterval(t));
+    let r;
+    try {
+      r = await ask('Puerto de carga', c0.cargando ? 'El móvil ya está cargando. Desconecta el cable y vuelve a conectarlo para comprobar el puerto.' : 'Conecta el cargador al puerto del móvil. Se detectará automáticamente.', 'bolt',
+        [O('Sin cargador a mano', 'np'), O('No carga', 'no', 'bad')], el('div', {}, linea));
+    } finally { clearInterval(t); quita(); }
+    S.res.Carga = r === 'si' ? 'OK' : r === 'np' ? 'No probado' : 'FALLO';
+    addCheck('Conexiones', 'Puerto de carga', r === 'si' ? 'OK' : r === 'np' ? 'INFO' : 'FALLO', r === 'si' ? 'Carga detectada' + (via ? ' (' + via + ')' : '') : r === 'np' ? 'No probado' : 'No carga al conectar el cargador');
+  } else {
+    const r = await ask('Puerto de carga', 'Conecta el cargador. ¿Aparece el icono de carga y sube el porcentaje?', 'bolt', [O('No probado', 'np'), O('No carga', 'no', 'bad'), O('Carga bien', 'si', 'good')]);
+    S.res.Carga = r === 'si' ? 'OK' : r === 'np' ? 'No probado' : 'FALLO';
+    addCheck('Conexiones', 'Puerto de carga', r === 'si' ? 'OK' : r === 'np' ? 'INFO' : 'FALLO', r === 'si' ? 'Carga correctamente' : r === 'np' ? 'No probado' : 'No carga');
+  }
+  // Auriculares con cable
+  const lin = el('div', { class: 'estado-line' }, el('span', { class: 'dot' }), el('span', {}, N ? 'Sin auriculares conectados' : 'Conecta unos auriculares y reproduce un sonido'));
+  let detect = false;
+  const tj = N ? setInterval(() => { const o = nat('getAudioOutputs'); if (o && o.wired) { detect = true; lin.classList.add('on'); lin.lastChild.textContent = 'Auriculares detectados: ' + o.wiredName; } }, 600) : 0;
+  const qj = limpieza(() => clearInterval(tj));
+  let rj;
+  try {
+    rj = await ask('Auriculares con cable', 'Si tiene jack de 3,5 mm (o auriculares USB-C), conecta unos auriculares y comprueba que se oye por ellos.', 'audio',
+      [O('No tiene jack', 'nt'), O('No probado', 'np'), O('No funciona', 'no', 'bad'), O('Funciona', 'si', 'good')], el('div', {}, lin));
+  } finally { clearInterval(tj); qj(); }
+  S.res.Jack = { si: 'OK', no: 'FALLO', nt: 'No tiene', np: 'No probado' }[rj];
+  if (rj !== 'nt') addCheck('Conexiones', 'Auriculares con cable', rj === 'si' ? 'OK' : rj === 'no' ? 'FALLO' : 'INFO', rj === 'si' ? 'Funcionan' + (detect ? ' (detectados)' : '') : rj === 'no' ? 'No se oye por los auriculares' : 'No probado');
+  // SIM
+  const n = nat('getNet');
+  const simTxt = n ? (n.simReady ? `SIM detectada${n.operator ? ' (' + n.operator + ')' : ''}` : 'Sin SIM o SIM no lista') + (n.slots ? ` · ${n.slots} ranura${n.slots > 1 ? 's' : ''}` : '') : '';
+  const rs = await ask('SIM, llamadas y datos', 'Con una SIM puesta, comprueba la cobertura, una llamada (se oye y te oyen) y los datos móviles.' + (simTxt ? '\n\nEstado: ' + simTxt + '.' : ''), 'phone',
+    [O('No probado', 'np'), O('Falla algo', 'no', 'bad'), O('Todo funciona', 'si', 'good')]);
+  S.res.SIM = rs === 'si' ? 'OK' : rs === 'np' ? 'No probado' : 'FALLO';
+  addCheck('Conexiones', 'SIM, llamadas y datos', rs === 'si' ? 'OK' : rs === 'np' ? 'INFO' : 'FALLO', rs === 'si' ? 'Cobertura, llamadas y datos correctos' : rs === 'np' ? 'No probado' + (simTxt ? ' · ' + simTxt : '') : 'Falla la SIM, las llamadas o los datos');
+  // Biometría
+  const inf = S.eq.info;
+  if (inf && !inf.hasFingerprint && !inf.hasFace) { S.res.Biometria = 'No tiene'; addCheck('Conexiones', 'Huella / cara', 'INFO', 'No tiene lector de huellas ni desbloqueo facial'); }
+  else {
+    const qu = inf ? [inf.hasFingerprint ? 'huella' : '', inf.hasFace ? 'reconocimiento facial' : ''].filter(Boolean).join(' y ') : 'huella o reconocimiento facial';
+    const rb = await ask('Desbloqueo biométrico', `Registra una ${qu} en Ajustes › Seguridad y prueba a desbloquear. Borra el registro al terminar.`, 'lock',
+      [O('No tiene', 'nt'), O('No probado', 'np'), O('Falla', 'no', 'bad'), O('Funciona', 'si', 'good')]);
+    S.res.Biometria = { si: 'OK', no: 'FALLO', nt: 'No tiene', np: 'No probado' }[rb];
+    addCheck('Conexiones', 'Huella / cara', rb === 'si' ? 'OK' : rb === 'no' ? 'FALLO' : 'INFO', { si: 'Desbloquea correctamente', no: 'El desbloqueo biométrico falla', nt: 'No tiene', np: 'No probado' }[rb]);
+  }
+}
+
+/* ---------- 14. Cuentas y bloqueos ---------- */
+async function faseCuentas() {
+  setFase('cuentas');
+  const r = await ask('Cuentas y bloqueos', 'Comprueba que el móvil no tiene ninguna cuenta vinculada (Google, Samsung, Xiaomi, iCloud) que lo bloquee al restablecerlo (FRP), que no está gestionado por una empresa y que el IMEI no está bloqueado.', 'lock',
+    [O('Pendiente de comprobar', 'pend'), O('Tiene bloqueo', 'no', 'bad'), O('Libre de bloqueos', 'si', 'good')]);
+  S.res.Bloqueos = { si: 'OK', no: 'BLOQUEADO', pend: 'Pendiente' }[r];
+  addCheck('Cuentas', 'Cuentas y bloqueos', r === 'si' ? 'OK' : r === 'no' ? 'FALLO' : 'INFO', r === 'si' ? 'Sin cuentas ni bloqueos' : r === 'no' ? 'El móvil tiene una cuenta o un bloqueo activo' : 'Pendiente de comprobar antes de la venta');
+}
+
+/* ---------- 15. Estética ---------- */
+async function faseEstetica() {
+  setFase('estetica');
+  const ops = [['A', 'Como nuevo', 'Sin marcas apreciables', 'var(--ok)'], ['B', 'Marcas leves', 'Arañazos finos o desgaste', 'var(--warn)'], ['C', 'Marcas visibles', 'Golpes, arañazos claros o grietas', 'var(--bad)']];
+  let sel = null; const bs = [];
+  const grid = el('div', { class: 'opciones', role: 'radiogroup' });
+  ops.forEach(([g, t, d, c]) => { const b = el('button', { type: 'button', class: 'opc', role: 'radio', 'aria-checked': 'false', onclick: () => { sel = g; bs.forEach(x => x.setAttribute('aria-checked', String(x === b))); aviso.hidden = true; } },
+    el('span', { class: 'g', style: 'color:' + c }, g), el('b', {}, t), el('small', {}, d)); bs.push(b); grid.append(b); });
+  const notas = el('textarea', { id: 'txtNotas', rows: '3' });
+  const aviso = el('p', { class: 'err', hidden: true }, 'Elige un grado estético antes de continuar.');
+  const body = el('div', {}, grid, el('label', { class: 'lbl', for: 'txtNotas' }, 'Observaciones (opcional)'), notas, aviso);
+  await ask('Estado estético', 'Valora la pantalla, el marco y la tapa trasera.', 'star', [{ t: 'Finalizar y generar informe', v: 'ok', st: 'pri', valida: () => { aviso.hidden = !!sel; return !!sel; } }], body);
+  return { grado: sel, notas: notas.value.trim().replace(/\s*\n\s*/g, ' ') };
+}
+
+/* =====================================================================
+   INFORMES
+   ===================================================================== */
+const LOGO_SVG = (s) => `<svg width="${s}" height="${s}" viewBox="-1 -1 102 102"><circle cx="44" cy="56" r="31" fill="none" stroke="#123E6B" stroke-width="9"/><path d="M2,49 C18,47 31,52 41,68 C56,42 74,20 99,5 C80,25 60,52 45,93 Z" fill="#1AA7EC" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"/><polyline points="23,47 31,47 34,40 38,55 42,35 46,51 49,45 57,45" fill="none" stroke="#fff" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><polyline points="23,47 31,47 34,40 38,55 42,35 46,51 49,45 57,45" fill="none" stroke="#1AA7EC" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+const EST_TXT = { A: 'Como nuevo', B: 'Marcas leves de uso', C: 'Marcas de uso visibles' };
+
+function datosFicha() {
+  const R = S.res, e = S.eq;
+  const bat = R.Bateria_Salud_pct !== '' ? `${R.Bateria_Salud_pct} %` + (R.Bateria_Ciclos !== '' ? ` · ${R.Bateria_Ciclos} ciclos` : '') : 'N/D';
+  return {
+    'Móvil': nombreEquipo(e), 'IMEI / nº de serie': S.serie, 'Sistema': sistemaTxt(e) + (e.parche ? ` · parche ${e.parche}` : ''),
+    'Memoria RAM': e.ramGB ? e.ramGB + ' GB' : 'N/D', 'Almacenamiento': e.almGB ? e.almGB + ' GB' : 'N/D', 'Batería': bat,
+    'Pantalla': e.pantalla, 'Estado estético': R.Estetica ? 'Grado ' + R.Estetica : '', 'Operario': S.operario, 'Prueba de Internet': S.internet || 'N/D'
+  };
+}
+
+function informeCompleto(veredicto, clase, fallos, avisos, minutos) {
+  const R = S.res, d = datosFicha();
+  const filas = S.checks.map(c => `<tr><td class="area">${esc(c.area)}</td><td><b>${esc(c.prueba)}</b></td><td><span class="pill ${c.estado.toLowerCase()}">${esc({ OK: 'Correcto', ATENCION: 'Aviso', FALLO: 'Fallo' }[c.estado] || 'Info')}</span></td><td>${esc(c.detalle)}</td></tr>`).join('\n');
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vPCheck Móvil · Informe - ${esc(S.serie)}</title>
+<style>
+ *{box-sizing:border-box}
+ body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:#f3f4f6;color:#111827;margin:0;padding:28px 16px}
+ .hoja{max-width:980px;margin:0 auto}
+ header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}
+ .marca{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+ .marca .n{font-size:26px;font-weight:800;line-height:1}.marca .n b{color:#123e6b}.marca .n i{font-style:normal;color:#1aa7ec}
+ .marca .e{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#123e6b;margin-top:4px}
+ h1{font-size:24px;margin:0} .sub{color:#6b7280;margin-top:4px;font-size:14px} .muted{color:#9ca3af}
+ .veredicto{border-radius:14px;padding:20px 26px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:16px}
+ .veredicto.ok{background:#16a34a}.veredicto.atencion{background:#d97706}.veredicto.fallo{background:#dc2626}
+ .veredicto .t{font-size:22px;font-weight:700}.veredicto .s{opacity:.9;margin-top:4px}
+ .grado{background:rgba(255,255,255,.18);border-radius:12px;padding:8px 22px;text-align:center;font-size:36px;font-weight:800;line-height:1.1}
+ .grado small{display:block;font-size:11px;letter-spacing:.08em;font-weight:600;opacity:.85}
+ .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px 24px;margin-top:16px}
+ .datos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px}
+ .datos span{display:block;font-size:12px;color:#6b7280;margin-bottom:2px}
+ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:0 0 10px}
+ .tabla{overflow-x:auto}
+ table{width:100%;border-collapse:collapse}
+ th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;padding:8px 10px;border-bottom:1px solid #e5e7eb}
+ td{padding:10px;border-bottom:1px solid #f3f4f6;font-size:14px;vertical-align:top}
+ tr:last-child td{border-bottom:none}
+ .area{color:#6b7280;font-size:13px;white-space:nowrap}
+ .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+ .pill.ok{background:#dcfce7;color:#15803d}.pill.atencion{background:#fef3c7;color:#b45309}
+ .pill.fallo{background:#fee2e2;color:#b91c1c}.pill.info{background:#f1f5f9;color:#475569}
+ @media (max-width:700px){.datos{grid-template-columns:1fr 1fr}header{display:block}.veredicto{padding:16px 18px}.veredicto .t{font-size:18px}td,th{padding:8px 6px;font-size:13px}}
+ @media print{body{background:#fff;padding:0}.card{border-color:#ddd}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="hoja">
+<div class="marca">${LOGO_SVG(54)}
+ <div><div class="n"><b>vP</b><i>Check</i></div><div class="e">AUDITORÍA Y DIAGNÓSTICO DE MÓVILES</div></div></div>
+<header>
+ <div><h1>Informe de revisión</h1><div class="sub">${esc(R.Fecha)} · Revisado por ${esc(S.operario)} · Duración ${minutos} min</div></div>
+ <div class="sub">IMEI / nº de serie <b>${esc(S.serie)}</b></div>
+</header>
+<div class="veredicto ${clase}">
+ <div><div class="t">${esc(veredicto)}</div><div class="s">${fallos} fallo(s) · ${avisos} aviso(s)</div></div>
+ <div class="grado"${R.Grado_Sugerido === 'No apto' ? ' style="font-size:22px;white-space:nowrap"' : ''}><small>GRADO</small>${esc(R.Grado_Sugerido)}</div>
+</div>
+<div class="card datos">
+${Object.entries(d).map(([k, v]) => ` <div><span>${esc(k)}</span><b>${esc(v || 'N/D')}</b></div>`).join('\n')}
+</div>
+<div class="card">
+ <h2>Pruebas realizadas</h2>
+ <div class="tabla"><table><tr><th>Área</th><th>Prueba</th><th>Estado</th><th>Detalle</th></tr>
+${filas}
+ </table></div>
+</div>
+<div class="card"><h2>Observaciones</h2>${R.Notas ? esc(R.Notas) : '<span class="muted">Sin observaciones</span>'}</div>
+</div></body></html>`;
+}
+
+/* Informe corto para el cliente (configurable) */
+const GRUPOS_CORTO = [
+  { t: 'Datos del móvil', o: [['Ficha_Equipo', 'Marca y modelo'], ['Ficha_Serie', 'IMEI / nº de serie'], ['Ficha_Sistema', 'Versión de Android'], ['Ficha_RAM', 'Memoria RAM'], ['Ficha_Alm', 'Almacenamiento'], ['Ficha_Bateria', 'Batería'], ['Ficha_Estetica', 'Estado estético']] },
+  { t: 'Pruebas que se muestran', o: [['Area_Pantalla', 'Pantalla'], ['Area_Tactil', 'Pantalla táctil'], ['Area_Bateria', 'Batería'], ['Area_Rend', 'Rendimiento'], ['Area_Memoria', 'Memoria y almacenamiento'], ['Area_Sistema', 'Sistema operativo'], ['Area_Red', 'Wi-Fi e Internet'], ['Area_Conect', 'Bluetooth, NFC y GPS'], ['Area_Sensores', 'Sensores'], ['Area_Sonido', 'Sonido y vibración'], ['Area_Micro', 'Micrófono'], ['Area_Camara', 'Cámaras'], ['Area_Botones', 'Botones'], ['Area_Conexiones', 'Carga, SIM y conexiones']] },
+  { t: 'Otros apartados', o: [['Grado', 'Grado (A / B / C)'], ['Fecha', 'Fecha de la revisión'], ['Operario', 'Técnico que lo revisó'], ['Observaciones', 'Observaciones'], ['DetalleIncidencias', 'Detalle de avisos y fallos']] }
+];
+function cfgCortoDefecto() { const d = { Activado: true, Garantia: '' }; GRUPOS_CORTO.forEach(g => g.o.forEach(o => d[o[0]] = true)); d.Operario = false; d.DetalleIncidencias = false; return d; }
+function cfgCorto() { return Object.assign(cfgCortoDefecto(), lsGet('vpc_cfg_corto', {})); }
+function actualizaEstadoCorto() {
+  const c = cfgCorto(); const n = Object.keys(c).filter(k => /^(Ficha|Area)_/.test(k) && c[k]).length;
+  $('#txtEstadoCorto').textContent = c.Activado ? `Activado · se generará junto al informe completo con ${n} datos y pruebas seleccionados.` : 'Desactivado · solo se generará el informe completo.';
+}
+async function configurarCorto() {
+  const c = cfgCorto(), ctl = {};
+  const body = el('div', {});
+  const sw = el('input', { type: 'checkbox', id: 'cfgAct' }); sw.checked = !!c.Activado; ctl.Activado = sw;
+  body.append(el('label', { class: 'switch', for: 'cfgAct' }, el('span', {}, el('b', {}, 'Generar el informe corto'), el('small', {}, 'Se crea al terminar cada revisión, junto al informe completo.')), sw, el('i')));
+  const gar = el('input', { type: 'text', id: 'cfgGar', placeholder: 'Ej.: Garantía de 12 meses', value: c.Garantia || '' }); ctl.Garantia = gar;
+  body.append(el('div', { class: 'cfg-g' }, el('h3', {}, 'Garantía (opcional)'), el('label', { class: 'hint', for: 'cfgGar', style: 'display:block;margin:0 0 6px' }, 'Texto que aparecerá en el informe. Déjalo vacío para no mostrarlo.'), gar));
+  for (const g of GRUPOS_CORTO) {
+    const grid = el('div', { class: 'chkgrid' });
+    g.o.forEach(([k, t]) => { const i = el('input', { type: 'checkbox', id: 'cfg_' + k }); i.checked = !!c[k]; ctl[k] = i; grid.append(el('label', { class: 'casilla', for: 'cfg_' + k }, i, t)); });
+    body.append(el('div', { class: 'cfg-g' }, el('h3', {}, g.t), grid));
+  }
+  pintaDialogo('d2', 'Informe corto para el cliente', 'Una hoja para entregar con el móvil. Elige qué datos y pruebas aparecen; la configuración se guarda en este móvil.', 'doc', body);
+  const box = $('#d2Btns');
+  const cerrar = () => { $('#dlg2').hidden = true; actualizaEstadoCorto(); };
+  box.append(
+    el('button', { type: 'button', class: 'btn pri', onclick: () => { const v = {}; for (const [k, i] of Object.entries(ctl)) v[k] = i.type === 'checkbox' ? i.checked : i.value.trim(); lsSet('vpc_cfg_corto', v); cerrar(); } }, 'Guardar'),
+    el('button', { type: 'button', class: 'btn', onclick: () => { const d = cfgCortoDefecto(); for (const [k, i] of Object.entries(ctl)) { if (i.type === 'checkbox') i.checked = !!d[k]; else i.value = d[k] || ''; } } }, 'Restablecer'),
+    el('button', { type: 'button', class: 'btn', onclick: cerrar }, 'Cancelar'));
+  $('#dlg2').hidden = false;
+}
+function informeCorto(cfg) {
+  const R = S.res, e = S.eq;
+  const en = (...a) => c => a.includes(c.area);
+  const areas = [
+    { k: 'Area_Pantalla', n: 'Pantalla', f: en('Pantalla'), d: () => 'Sin píxeles muertos, manchas ni quemado' },
+    { k: 'Area_Tactil', n: 'Pantalla táctil', f: en('Táctil'), d: () => 'Toda la superficie y el multitáctil responden' },
+    { k: 'Area_Bateria', n: 'Batería', neutral: true, f: en('Batería'), d: () => R.Bateria_Salud_pct !== '' ? `Conserva el ${String(R.Bateria_Salud_pct).replace(' (est.)', '')} % de su capacidad original${String(R.Bateria_Salud_pct).includes('est') ? ' (estimado)' : ''}` : '' },
+    { k: 'Area_Rend', n: 'Rendimiento', neutral: true, f: en('Rendimiento'), d: () => `Prueba de carga de ${S.segCPU} s` + (S.tempMax ? ` · temperatura máx. ${S.tempMax.toFixed(0)} °C` : '') },
+    { k: 'Area_Memoria', n: 'Memoria y almacenamiento', neutral: true, f: en('Memoria', 'Almacenamiento'), d: () => [e.ramGB ? e.ramGB + ' GB RAM' : '', e.almGB ? e.almGB + ' GB' : ''].filter(Boolean).join(' · ') },
+    { k: 'Area_Sistema', n: 'Sistema operativo', neutral: true, f: en('Sistema'), d: () => sistemaTxt(e) },
+    { k: 'Area_Red', n: 'Wi-Fi e Internet', neutral: true, f: en('Red'), d: () => S.internet && !/Sin/.test(S.internet) ? 'Conexión probada: ' + S.internet : '' },
+    { k: 'Area_Conect', n: 'Bluetooth, NFC y GPS', f: en('Conectividad'), d: () => 'Comprobados y funcionando' },
+    { k: 'Area_Sensores', n: 'Sensores', f: en('Sensores'), d: () => 'Acelerómetro, giroscopio, brújula' + (S.eq.info ? ' y proximidad' : '') },
+    { k: 'Area_Sonido', n: 'Sonido y vibración', f: en('Altavoces', 'Vibración'), d: () => 'Altavoz, auricular y vibración correctos' },
+    { k: 'Area_Micro', n: 'Micrófono', f: en('Micrófono'), d: () => 'Graba con claridad' },
+    { k: 'Area_Camara', n: 'Cámaras', f: en('Cámaras'), d: () => 'Cámaras trasera y frontal, imagen correcta' },
+    { k: 'Area_Botones', n: 'Botones', f: en('Botones'), d: () => 'Volumen y encendido' },
+    { k: 'Area_Conexiones', n: 'Carga, SIM y conexiones', f: en('Conexiones'), d: () => 'Puerto de carga y conexiones comprobados' }
+  ];
+  const cls = ['ok', 'atencion', 'fallo'], txs = ['Correcto', 'Con observaciones', 'Incidencia'], sim = ['&#10003;', '!', '&#10005;'];
+  let peor = 0; const filas = [];
+  for (const a of areas) {
+    if (!cfg[a.k]) continue;
+    const cs = S.checks.filter(a.f).filter(c => c.estado !== 'INFO');
+    if (!cs.length) continue;
+    const niv = cs.some(c => c.estado === 'FALLO') ? 2 : cs.some(c => c.estado === 'ATENCION') ? 1 : 0;
+    peor = Math.max(peor, niv);
+    const dt = a.neutral || niv === 0 ? a.d() : 'Revisar: ' + cs.filter(c => c.estado !== 'OK').map(c => c.prueba).join(', ');
+    filas.push(`<div class="fila"><span class="ico ${cls[niv]}">${sim[niv]}</span><div><b>${esc(a.n)}</b>${dt ? `<small>${esc(dt)}</small>` : ''}</div><span class="est ${cls[niv]}">${txs[niv]}</span></div>`);
+  }
+  const titulos = ['Móvil revisado: todas las pruebas superadas', 'Móvil revisado: pruebas superadas con observaciones', 'Móvil revisado con incidencias pendientes'];
+  const ficha = []; const dato = (k, v) => { if (String(v || '').trim()) ficha.push(`<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`); };
+  if (cfg.Ficha_Equipo) dato('Móvil', nombreEquipo(e));
+  if (cfg.Ficha_Serie) dato('IMEI / nº de serie', S.serie);
+  if (cfg.Ficha_Sistema) dato('Sistema', sistemaTxt(e));
+  if (cfg.Ficha_RAM) dato('Memoria RAM', e.ramGB ? e.ramGB + ' GB' : '');
+  if (cfg.Ficha_Alm) dato('Almacenamiento', e.almGB ? e.almGB + ' GB' : '');
+  if (cfg.Ficha_Bateria) dato('Batería', R.Bateria_Salud_pct !== '' ? String(R.Bateria_Salud_pct).replace(' (est.)', '') + ' % de su capacidad original' : '');
+  if (cfg.Ficha_Estetica && R.Estetica) dato('Estado estético', `Grado ${R.Estetica} · ${EST_TXT[R.Estetica]}`);
+  if (cfg.Fecha) dato('Fecha de revisión', fechaCorta(new Date()));
+  if (cfg.Operario) dato('Revisado por', S.operario);
+  const grado = cfg.Grado && /^[ABC]$/.test(R.Grado_Sugerido) ? `<div class="grado"><small>GRADO</small>${esc(R.Grado_Sugerido)}</div>` : '';
+  let incid = '';
+  if (cfg.DetalleIncidencias) { const l = S.checks.filter(c => c.estado === 'FALLO' || c.estado === 'ATENCION'); if (l.length) incid = `<div class="bloque"><h2>Detalle de observaciones</h2><ul>${l.map(c => `<li><b>${esc(c.prueba)}:</b> ${esc(c.detalle)}</li>`).join('')}</ul></div>`; }
+  const obs = cfg.Observaciones && R.Notas ? `<div class="bloque"><h2>Observaciones</h2><p>${esc(R.Notas)}</p></div>` : '';
+  const gar = (cfg.Garantia || '').trim() ? `<div class="garantia">${esc(cfg.Garantia)}</div>` : '';
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vPCheck · Certificado de revisión - ${esc(S.serie)}</title>
+<style>
+ *{box-sizing:border-box}
+ body{font-family:"Segoe UI",Roboto,Arial,sans-serif;color:#111827;background:#f3f4f6;margin:0;padding:28px 16px;font-size:14px}
+ .hoja{max-width:820px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:32px 36px}
+ .cab{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:2px solid #e8f6fd;padding-bottom:18px}
+ .marca{display:flex;align-items:center;gap:10px}
+ .marca .n{font-size:24px;font-weight:800;line-height:1}.marca .n b{color:#123e6b}.marca .n i{font-style:normal;color:#1aa7ec}
+ .marca .e{font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#123e6b;margin-top:4px}
+ h1{font-size:21px;margin:22px 0 14px}
+ .estado{display:flex;justify-content:space-between;align-items:center;gap:16px;border-radius:12px;padding:16px 20px;color:#fff}
+ .estado.ok{background:#16a34a}.estado.atencion{background:#d97706}.estado.fallo{background:#dc2626}
+ .estado .t{font-size:17px;font-weight:700}
+ .grado{background:rgba(255,255,255,.2);border-radius:10px;padding:6px 18px;text-align:center;font-size:30px;font-weight:800;line-height:1.1}
+ .grado small{display:block;font-size:10px;letter-spacing:.08em;font-weight:600;opacity:.9}
+ .ficha{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin:20px 0 4px}
+ .ficha span{display:block;font-size:11.5px;color:#6b7280;margin-bottom:2px}.ficha b{font-weight:600;font-size:13.5px}
+ h2{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:0 0 8px}
+ .bloque{margin-top:20px}
+ .filas{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+ .fila{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6}
+ .fila>div{flex:1}.fila small{display:block;color:#6b7280;font-size:12px;margin-top:1px}
+ .ico{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex:none}
+ .ico.ok{background:#16a34a}.ico.atencion{background:#d97706}.ico.fallo{background:#dc2626}
+ .est{font-size:11.5px;font-weight:600;white-space:nowrap}.est.ok{color:#15803d}.est.atencion{color:#b45309}.est.fallo{color:#b91c1c}
+ ul{margin:0;padding-left:18px}li{margin:3px 0;font-size:13px} p{margin:0}
+ .garantia{margin-top:20px;background:#e8f6fd;border-radius:10px;padding:12px 16px;color:#0a6a9f;font-weight:600}
+ .pie{margin-top:26px;font-size:11px;color:#9ca3af;text-align:center}
+ @media (max-width:640px){.hoja{padding:22px 18px}.ficha{grid-template-columns:1fr 1fr}.filas{grid-template-columns:1fr}.cab{display:block}}
+ @page{size:A4;margin:12mm}
+ @media print{body{background:#fff;padding:0;font-size:13px}.hoja{border:none;border-radius:0;padding:0;max-width:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="hoja">
+<div class="cab"><div class="marca">${LOGO_SVG(46)}
+  <div><div class="n"><b>vP</b><i>Check</i></div><div class="e">AUDITORÍA Y DIAGNÓSTICO DE MÓVILES</div></div></div></div>
+<h1>Certificado de revisión del móvil</h1>
+<div class="estado ${cls[peor]}"><div class="t">${titulos[peor]}</div>${grado}</div>
+${ficha.length ? `<div class="ficha">${ficha.join('')}</div>` : ''}
+${filas.length ? `<div class="bloque"><h2>Pruebas realizadas</h2><div class="filas">${filas.join('')}</div></div>` : ''}
+${incid}
+${obs}
+${gar}
+<div class="pie">Informe generado con vPCheck Móvil · IMEI / nº de serie ${esc(S.serie)}</div>
+</div></body></html>`;
+}
+
+function completar(est) {
+  const R = S.res;
+  R.Estetica = est.grado; R.Notas = est.notas;
+  const fallos = S.checks.filter(c => c.estado === 'FALLO'), avisos = S.checks.filter(c => c.estado === 'ATENCION');
+  let veredicto, gradoTec, clase;
+  if (fallos.length) { veredicto = 'REVISAR / NO APTO PARA VENTA'; gradoTec = 'C'; clase = 'fallo'; }
+  else if (avisos.length) { veredicto = 'APTO CON OBSERVACIONES'; gradoTec = 'B'; clase = 'atencion'; }
+  else { veredicto = 'APTO PARA VENTA'; gradoTec = 'A'; clase = 'ok'; }
+  const orden = { A: 1, B: 2, C: 3 };
+  const gradoFinal = orden[gradoTec] >= orden[est.grado] ? gradoTec : est.grado;
+  R.Fallos = fallos.length; R.Avisos = avisos.length; R.Resultado = veredicto;
+  R.Grado_Sugerido = fallos.length ? 'No apto' : gradoFinal;
+  const minutos = Math.round((Date.now() - S.inicio) / 6000) / 10;
+
+  const cfg = cfgCorto();
+  const limpio = S.serie.replace(/[^\w\-]/g, '_'); const d = new Date();
+  const nombre = `${limpio}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+  S.pend = { nombre, html: informeCompleto(veredicto, clase, fallos.length, avisos.length, minutos), corto: cfg.Activado ? informeCorto(cfg) : null, res: { ...R }, guardado: false };
+
+  // vista de resultado
+  $('#heroe').className = 'heroe ' + (clase === 'ok' ? '' : clase);
+  $('#heroeIco').innerHTML = ico(clase === 'ok' ? 'ok' : clase === 'fallo' ? 'fail' : 'warn');
+  $('#txtVeredicto').textContent = veredicto;
+  $('#txtVeredictoSub').textContent = `${fallos.length} fallo(s)  ·  ${avisos.length} aviso(s)  ·  ${minutos} min`;
+  const g = $('#txtGrado'); g.textContent = R.Grado_Sugerido; g.className = R.Grado_Sugerido === 'No apto' ? 'na' : '';
+  const grid = $('#gridDatos'); grid.innerHTML = '';
+  for (const [k, v] of Object.entries(datosFicha())) grid.append(el('div', {}, el('span', {}, k), el('b', {}, v || 'N/D')));
+  const li = $('#listaInc'); li.innerHTML = '';
+  [...fallos, ...avisos].forEach(c => li.append(filaCheck(c)));
+  $('#sinInc').hidden = fallos.length + avisos.length > 0;
+  $('#btnVerCli').hidden = !S.pend.corto;
+  const ruta = $('#txtRuta'); ruta.textContent = 'Los informes todavía no se han guardado.'; ruta.className = 'ruta';
+  $('#btnGuardar').disabled = false; $('#txtBtnGuardar').textContent = 'Guardar informes';
+  $('#progreso').hidden = true;
+  vista('vRes');
+}
+
+/* ---------- guardar, ver, compartir ---------- */
+function aCSV(filas) {
+  const q = v => { const s = String(v ?? ''); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  return '﻿' + [COLUMNAS.join(';'), ...filas.map(r => COLUMNAS.map(k => q(r[k])).join(';'))].join('\r\n') + '\r\n';
+}
+function descargarWeb(nombre, contenido, tipo) {
+  const url = URL.createObjectURL(new Blob([contenido], { type: tipo + ';charset=utf-8' }));
+  const a = el('a', { href: url, download: nombre }); document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+async function guardar() {
+  const p = S.pend; if (!p || p.guardado) return true;
+  const archivos = [[p.nombre + '.html', p.html]]; if (p.corto) archivos.push([p.nombre + '_cliente.html', p.corto]);
+  const hist = lsGet('vpc_hist', []); hist.push(p.res); lsSet('vpc_hist', hist);
+  const ruta = $('#txtRuta');
+  if (N && typeof N.saveFile === 'function') {
+    let error = '', lugar = '';
+    for (const [n, c] of archivos) { const r = String(N.saveFile(n, 'text/html', c)); if (r.startsWith('ERROR')) error = r; else lugar = r.replace(/\/[^/]*$/, ''); }
+    const rc = String(N.saveFile('Resumen_auditorias.csv', 'text/csv', aCSV(hist)));
+    if (error) { ruta.textContent = 'No se pudieron guardar los informes: ' + error.replace(/^ERROR:?\s*/, ''); ruta.className = 'ruta bad'; return false; }
+    ruta.textContent = rc.startsWith('ERROR') ? `Informes guardados en ${lugar}. ¡Atención! No se pudo actualizar el CSV resumen.` : `Informes y resumen CSV guardados en ${lugar}`;
+    ruta.className = rc.startsWith('ERROR') ? 'ruta bad' : 'ruta ok';
+  } else {
+    for (const [n, c] of archivos) { descargarWeb(n, c, 'text/html'); await sleep(600); }
+    ruta.textContent = 'Informes descargados en la carpeta de descargas. El resumen CSV se exporta desde «Historial».'; ruta.className = 'ruta ok';
+  }
+  p.guardado = true; $('#btnGuardar').disabled = true; $('#txtBtnGuardar').textContent = 'Informes guardados';
+  return true;
+}
+function verInforme(html, titulo) { $('#visorT').textContent = titulo; $('#visorF').srcdoc = html; $('#visor').hidden = false; }
+async function compartir() {
+  const p = S.pend; if (!p) return;
+  const html = p.corto || p.html, nombre = p.nombre + (p.corto ? '_cliente' : '') + '.html';
+  if (N && typeof N.share === 'function') { nat('share', nombre, 'text/html', html); return; }
+  try {
+    const f = new File([html], nombre, { type: 'text/html' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Informe vPCheck' }); return; }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  await avisar('Compartir', 'Este navegador no permite compartir archivos. Usa «Guardar informes» y envíalo desde la carpeta de descargas.');
+}
+async function mostrarFinal() {
+  let r;
+  do {
+    const ops = [O('Ver completo', 'ver')]; if (S.pend.corto) ops.push(O('Ver informe cliente', 'cli'));
+    ops.push(O('Ahora no', 'no'), O('Guardar informes', 'guardar', 'pri'));
+    r = await ask('Revisión terminada', 'Los informes están listos. Puedes verlos y guardarlos en el móvil.\n\nSi no los guardas ahora, podrás hacerlo después con el botón «Guardar informes».', 'ok', ops);
+    if (r === 'ver') { verInforme(S.pend.html, 'Informe completo'); await esperaVisor(); }
+    if (r === 'cli') { verInforme(S.pend.corto, 'Informe para el cliente'); await esperaVisor(); }
+    if (r === 'guardar') await guardar();
+  } while (r === 'ver' || r === 'cli');
+}
+function esperaVisor() { return new Promise(res => { const t = setInterval(() => { if ($('#visor').hidden) { clearInterval(t); res(); } }, 200); }); }
+async function nuevaRevision() {
+  if (S.pend && !S.pend.guardado) {
+    const v = await confirmar('Los informes no se han guardado', '¿Quieres guardarlos antes de empezar una nueva revisión?', 'Guardar y continuar', 'Descartar', 'warn', 'pri');
+    if (v && !(await guardar())) return;
+  }
+  S.pend = null; $('#inSerie').value = ''; volverInicio(); $('#inSerie').focus({ preventScroll: true });
+}
+async function historial() {
+  const h = lsGet('vpc_hist', []);
+  const lista = el('div', { class: 'hist' });
+  if (!h.length) lista.append(el('p', { class: 'muted' }, 'Todavía no hay revisiones guardadas en este móvil.'));
+  h.slice(-30).reverse().forEach(r => lista.append(el('div', {}, el('span', {}, el('b', {}, `${r.Marca || ''} ${r.Modelo || ''}`.trim() || 'Móvil'), el('br'), el('small', {}, `${r.Fecha} · ${r.IMEI_Serie}`)), el('small', {}, `${r.Resultado || ''} · ${r.Grado_Sugerido || ''}`))));
+  pintaDialogo('d2', 'Historial', `${h.length} revisión(es) guardadas en este móvil.`, 'doc', lista);
+  const box = $('#d2Btns'), cerrar = () => $('#dlg2').hidden = true;
+  if (h.length) {
+    box.append(el('button', { type: 'button', class: 'btn pri', onclick: () => {
+      if (N && typeof N.saveFile === 'function') { const r = String(N.saveFile('Resumen_auditorias.csv', 'text/csv', aCSV(h))); cerrar(); avisar('Resumen CSV', r.startsWith('ERROR') ? 'No se pudo guardar: ' + r : 'Guardado en ' + r, r.startsWith('ERROR') ? 'fail' : 'ok'); }
+      else { descargarWeb('Resumen_auditorias.csv', aCSV(h), 'text/csv'); cerrar(); }
+    } }, 'Exportar resumen CSV'));
+    box.append(el('button', { type: 'button', class: 'btn bad', onclick: async () => { cerrar(); if (await confirmar('¿Borrar el historial?', 'Se borra la lista de revisiones de este móvil. Los informes ya guardados no se tocan.', 'Borrar historial', 'Cancelar')) lsSet('vpc_hist', []); } }, 'Borrar historial'));
+  }
+  box.append(el('button', { type: 'button', class: 'btn', onclick: cerrar }, 'Cerrar'));
+  $('#dlg2').hidden = false;
+}
+
+/* =====================================================================
+   ARRANQUE
+   ===================================================================== */
+$('#btnIniciar').onclick = comenzar;
+$('#btnCancelar').onclick = cancelar;
+$('#chkRapida').onchange = actualizaEstimacion;
+document.querySelectorAll('#segCPU button').forEach(b => b.onclick = () => { S.segCPU = +b.dataset.s; lsSet('vpc_segcpu', S.segCPU); marcaSeg(); actualizaEstimacion(); });
+$('#btnConfigCorto').onclick = configurarCorto;
+$('#btnHistorial').onclick = historial;
+$('#btnVer').onclick = () => S.pend && verInforme(S.pend.html, 'Informe completo');
+$('#btnVerCli').onclick = () => S.pend?.corto && verInforme(S.pend.corto, 'Informe para el cliente');
+$('#btnGuardar').onclick = guardar;
+$('#btnCompartir').onclick = compartir;
+$('#btnNueva').onclick = nuevaRevision;
+$('#visorX').onclick = () => { $('#visor').hidden = true; $('#visorF').srcdoc = ''; };
+$('#inSerie').addEventListener('keydown', e => { if (e.key === 'Enter') comenzar(); });
+// Botón «atrás» de Android (lo envía la app)
+onNat('back', async () => {
+  if (!$('#visor').hidden) { $('#visorX').click(); return; }
+  if (!$('#dlg2').hidden) return;
+  if (S.running) { cancelar(); return; }
+  if (!$('#vRes').hidden) { nuevaRevision(); return; }
+  nat('exitApp');
+});
+iniciarPantalla();
+</script>
+</body>
+</html>

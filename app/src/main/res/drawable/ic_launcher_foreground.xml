@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo vPCheck (el mismo que la versión de ordenador) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="23.4" android:translateY="23.4" android:scaleX="0.6" android:scaleY="0.6">
+        <group android:translateX="1" android:translateY="1">
+            <path android:pathData="M75,56 A31,31 0 1,1 13,56 A31,31 0 1,1 75,56 Z"
+                android:fillColor="#00000000" android:strokeColor="#123E6B" android:strokeWidth="9" />
+            <path android:pathData="M2,49 C18,47 31,52 41,68 C56,42 74,20 99,5 C80,25 60,52 45,93 Z"
+                android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="8" android:strokeLineJoin="round" />
+            <path android:pathData="M2,49 C18,47 31,52 41,68 C56,42 74,20 99,5 C80,25 60,52 45,93 Z" android:fillColor="#1AA7EC" />
+            <path android:pathData="M23,47 L31,47 L34,40 L38,55 L42,35 L46,51 L49,45 L57,45"
+                android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="5.5"
+                android:strokeLineJoin="round" android:strokeLineCap="round" />
+            <path android:pathData="M23,47 L31,47 L34,40 L38,55 L42,35 L46,51 L49,45 L57,45"
+                android:fillColor="#00000000" android:strokeColor="#1AA7EC" android:strokeWidth="3"
+                android:strokeLineJoin="round" android:strokeLineCap="round" />
+        </group>
+    </group>
+</vector>
